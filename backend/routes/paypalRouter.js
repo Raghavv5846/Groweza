@@ -10,7 +10,7 @@ import {
     createSubscription,
     createPlan,
 } from '../controller/paypalController.js';
-import {authenticate} from '../middleware/authMiddleware.js';
+import {authenticate} from '../middleWare/authMiddleware.js';
 
 const router = express.Router();
 
