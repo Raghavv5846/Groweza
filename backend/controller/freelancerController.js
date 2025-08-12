@@ -3,30 +3,168 @@ import User from "../model/userModel.js"
 import fs from 'fs';
 
 
+// export const completeOnboarding = async (req, res) => {
+//     try {
+//         // console.log('Onboarding Request Body:', req.body);
+//         const userId = req.user._id;
+
+//         const {
+//             bio,
+//             skills,
+//             typeOfWork,
+//             workExperience,
+//             location,
+//             heardUsFrom,
+//             phone,
+//             website
+//         } = req.body;
+
+//         let profileUrl = '';
+
+//         // If image is uploaded
+//         if (req.file) {
+//             const result = await cloudinary.uploader.upload(req.file.path, {
+//                 folder: 'freelancer_profiles',
+//                 width: 300,
+//                 crop: 'scale',
+//             });
+
+//             profileUrl = result.secure_url;
+//         }
+
+//         const updatedUser = await User.findByIdAndUpdate(
+//             userId,
+//             {
+//                 profile: profileUrl || undefined,
+//                 bio,
+//                 skills,
+//                 typeOfWork,
+//                 workExperience,
+//                 location,
+//                 heardUsFrom,
+//                 phone,
+//                 website,
+//                 hasCompleted: true,
+//             },
+//             { new: true }
+//         );
+
+
+//         if (!updatedUser) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
+
+//         res.status(200).json({
+//             message: 'Onboarding completed successfully',
+//             user: updatedUser,
+//         });
+//     } catch (error) {
+//         console.error('Onboarding Error:', error);
+//         res.status(500).json({ message: 'Server Error', error: error.message });
+//     }
+// };
+
+
+// export const completeOnboarding = async (req, res) => {
+//     try {
+//         const userId = req.user._id;
+
+//         // Parse JSON fields from FormData
+//         const skills = req.body.skills ? JSON.parse(req.body.skills) : [];
+//         const typeOfWork = req.body.typeOfWork ? JSON.parse(req.body.typeOfWork) : [];
+//         const location = req.body.location
+//             ? JSON.parse(req.body.location)
+//             : {
+//                   city: req.body['location[city]'] || '',
+//                   country: req.body['location[country]'] || ''
+//               };
+
+//         let profileUrl = '';
+
+//         // If image is uploaded
+//         if (req.file && req.file.buffer) {
+//             const result = await new Promise((resolve, reject) => {
+//                 cloudinary.uploader.upload_stream(
+//                     { folder: 'freelancer_profiles', width: 300, crop: 'scale' },
+//                     (error, uploaded) => {
+//                         if (error) return reject(error);
+//                         resolve(uploaded);
+//                     }
+//                 ).end(req.file.buffer);
+//             });
+
+//             profileUrl = result.secure_url;
+//         }
+
+//         const updatedUser = await User.findByIdAndUpdate(
+//             userId,
+//             {
+//                 profile: profileUrl || undefined,
+//                 bio: req.body.bio,
+//                 skills,
+//                 typeOfWork,
+//                 workExperience: req.body.workExperience,
+//                 location,
+//                 heardUsFrom: req.body.heardUsFrom,
+//                 phone: req.body.phone,
+//                 website: req.body.website,
+//                 hasCompleted: true,
+//             },
+//             { new: true }
+//         );
+
+//         if (!updatedUser) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
+
+//         res.status(200).json({
+//             message: 'Onboarding completed successfully',
+//             user: updatedUser,
+//         });
+//     } catch (error) {
+//         console.error('Onboarding Error:', error);
+//         res.status(500).json({ message: 'Server Error', error: error.message });
+//     }
+// };
+
+
+
 export const completeOnboarding = async (req, res) => {
     try {
-        // console.log('Onboarding Request Body:', req.body);
         const userId = req.user._id;
 
-        const {
-            bio,
-            skills,
-            typeOfWork,
-            workExperience,
-            location,
-            heardUsFrom,
-            phone,
-            website
-        } = req.body;
+        // Safe parse helper
+        const safeParse = (value, fallback) => {
+            if (!value) return fallback;
+            if (typeof value === 'string') {
+                try {
+                    return JSON.parse(value);
+                } catch {
+                    return fallback;
+                }
+            }
+            return value; // already object/array
+        };
+
+        const skills = safeParse(req.body.skills, []);
+        const typeOfWork = safeParse(req.body.typeOfWork, []);
+        const location = safeParse(req.body.location, {
+            city: req.body['location[city]'] || '',
+            country: req.body['location[country]'] || ''
+        });
 
         let profileUrl = '';
 
-        // If image is uploaded
-        if (req.file) {
-            const result = await cloudinary.uploader.upload(req.file.path, {
-                folder: 'freelancer_profiles',
-                width: 300,
-                crop: 'scale',
+        // If image is uploaded (memoryStorage)
+        if (req.file && req.file.buffer) {
+            const result = await new Promise((resolve, reject) => {
+                cloudinary.uploader.upload_stream(
+                    { folder: 'freelancer_profiles', width: 300, crop: 'scale' },
+                    (error, uploaded) => {
+                        if (error) return reject(error);
+                        resolve(uploaded);
+                    }
+                ).end(req.file.buffer);
             });
 
             profileUrl = result.secure_url;
@@ -36,19 +174,18 @@ export const completeOnboarding = async (req, res) => {
             userId,
             {
                 profile: profileUrl || undefined,
-                bio,
+                bio: req.body.bio,
                 skills,
                 typeOfWork,
-                workExperience,
+                workExperience: req.body.workExperience,
                 location,
-                heardUsFrom,
-                phone,
-                website,
+                heardUsFrom: req.body.heardUsFrom,
+                phone: req.body.phone,
+                website: req.body.website,
                 hasCompleted: true,
             },
             { new: true }
         );
-
 
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });

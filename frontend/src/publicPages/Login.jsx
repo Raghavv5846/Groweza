@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { googleAuth } from "../api.js";
@@ -7,7 +7,19 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Button } from '@/components/ui/button';
+import {
+    Eye,
+    EyeOff,
+    Mail,
+    Lock,
+    ArrowRight,
+    Check,
+    Sparkles,
+    Brain,
+    Zap,
+    Shield,
+    ChevronRight
+} from 'lucide-react';
 
 const EnhancedLogin = () => {
     const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -15,10 +27,8 @@ const EnhancedLogin = () => {
     const [loginMode, setLoginMode] = useState('default'); // 'default', 'loading', 'success', 'error'
     const [showPassword, setShowPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('Invalid email or password. Please try again.');
-
-
-
-
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const canvasRef = useRef(null);
     const navigate = useNavigate();
 
     // Function to show success toast and transition to success state
@@ -188,381 +198,393 @@ const EnhancedLogin = () => {
         }
     };
 
-    return (
-        <div className="flex w-full  flex-col items-center  min-h-screen  bg-gradient-to-br from-blue-50 via-white to-purple-50  relative overflow-hidden">
+    // 3D transform based on mouse position
+    const getTransform = (intensity = 1) => {
+        const x = (mousePosition.x - window.innerWidth / 2) / 50 * intensity;
+        const y = (mousePosition.y - window.innerHeight / 2) / 50 * intensity;
+        return `perspective(1000px) rotateX(${y}deg) rotateY(${x}deg)`;
+    };
 
-            <header className="container mx-auto mb-10 px-10 border-b-2 py-5 bg-gray-50">
-                <div className="flex items-center justify-between" onClick={()=>{navigate("/")}}>
-                    <div className="flex items-center space-x-3 cursor-pointer">
-                        <img
-                            src="/logo.png"
-                            alt="Groweza Logo"
-                            className="w-10 h-10 rounded-lg shadow-lg"
-                        />
-                        <h1 className="text-2xl font-bold gradient-logo cursor-pointer">Groweza</h1>
+    // Mouse tracking for 3D effects
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            setMousePosition({ x: e.clientX, y: e.clientY });
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, []);
+
+    // Particle system
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 30;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.3;
+                this.vy = (Math.random() - 0.5) * 0.3;
+                this.size = Math.random() * 2 + 1;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(168, 85, 247, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            requestAnimationFrame(animate);
+        };
+
+        animate();
+
+        const handleResize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+
+
+    return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center relative overflow-hidden">
+            {/* Particle Canvas Background */}
+            <canvas
+                ref={canvasRef}
+                className="fixed inset-0 pointer-events-none z-0"
+                style={{ mixBlendMode: 'screen' }}
+            />
+
+            {/* Gradient Overlays */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-blue-900/20" />
+                <div className="absolute inset-0 bg-gradient-to-tl from-pink-900/10 via-transparent to-cyan-900/10" />
+                <div
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                        background: 'radial-gradient(circle at center, rgba(168, 85, 247, 0.1) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 80%)',
+                        backgroundSize: '150% 150%',
+                        animation: 'gradientFloat 20s ease-in-out infinite alternate'
+                    }}
+                />
+            </div>
+
+            {/* Navigation Header */}
+            <header className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-xl border-b border-white/10 mb-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <div className="flex items-center space-x-3 cursor-pointer">
+                            <h1 className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent"
+                            onClick={() => navigate("/")}>
+                                Groweza
+                            </h1>
+                        </div>
+
+                        <nav className="hidden md:flex items-center space-x-8">
+                            <button className="px-6 py-2 border border-purple-500/30 text-purple-300 hover:text-white hover:border-purple-400 rounded-lg transition-all duration-300 cursor-pointer"
+                            onClick={() => navigate("/")}>
+                                Back to Home
+                            </button>
+                        </nav>
                     </div>
-                    <nav className="hidden md:flex items-center space-x-8">
-                        <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-                        <a href="#testimonials" className="text-gray-600 hover:text-gray-900 transition-colors">Testimonials</a>
-                        <a href="#free-platform" className="text-gray-600 hover:text-gray-900 transition-colors">Free Platform</a>
-                        <Button
-                            variant="outline"
-                            onClick={() => navigate('/login')}
-                            className="text-gray-600 hover:text-gray-900 cursor-pointer "
-                        >
-                            Dashboard
-                        </Button>
-                        <Button
-                            onClick={() => navigate('/login')}
-                            className="btn-gradient-primary text-white cursor-pointer"
-                        >
-                            Get Started Free
-                        </Button>
-                    </nav>
                 </div>
             </header>
 
+            {/* Main Login Container */}
+            <div className="relative z-10 w-full max-w-md mx-4 mt-30">
+                <div
+                    className="relative group"
+                    style={{ transform: getTransform(0.3) }}
+                >
+                    {/* Glowing background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-3xl blur-3xl scale-110 group-hover:scale-125 transition-transform duration-700" />
 
-            <Particles />
+                    {/* Main card */}
+                    <div className="relative bg-gradient-to-br from-gray-900/90 to-black/90 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+                        {/* Top accent bar */}
+                        <div
+                            className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500"
+                            style={{ animation: 'shimmer 3s ease-in-out infinite' }}
+                        />
 
-            {/* Animated gradient background */}
-            <motion.div
-                className="absolute inset-0 opacity-20 pointer-events-none bg-white"
-                initial={{ backgroundPosition: '0% 0%' }}
-                animate={{
-                    backgroundPosition: ['0% 0%', '100% 100%'],
-                    transition: { duration: 20, repeat: Infinity, repeatType: 'reverse' }
-                }}
-                style={{
-                    backgroundImage: 'radial-gradient(circle at center, rgba(108, 93, 211, 0.3) 0%, rgba(54, 131, 252, 0.2) 50%, rgba(20, 30, 60, 0) 80%)',
-                    backgroundSize: '150% 150%',
-                }}
-            />
+                        <div className="p-8">
+                            {/* Logo and title */}
+                            <div className="flex items-center mb-8">
+                                <div>
+                                    <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                                        Groweza
+                                    </h2>
+                                    <p className="text-xs text-gray-400">AI-Powered Freelancer Dashboard</p>
+                                </div>
+                            </div>
 
-
-            <motion.div
-                initial={{ opacity: 0, y: -30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.9, type: "spring" }}
-                className="bg-gray-100-100 rounded-2xl w-100 backdrop-blur-lg shadow-2xl border border-[#4a558280] relative z-10 overflow-hidden"
-            >
-                {/* Top colored accent */}
-                <motion.div
-                    className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#6c5dd3] via-[#3683fc] to-[#5f95ff]"
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ duration: 1.5, delay: 0.3 }}
-                />
-
-                <div className="p-8">
-                    <motion.div
-                        className="flex items-center mb-8"
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6 }}
-                    >
-                        <motion.div
-                            className="w-10 h-10 rounded-lg mr-3 flex items-center justify-center bg-gradient-to-br from-purple-300 to-blue-300"
-                            whileHover={{ rotate: 5, scale: 1.1 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                        >
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: 0.5, type: "spring" }}
-                            >
-                               <img src="/logo.png" alt="logo" className='w-10 h-10 rounded-2xl' />
-                            </motion.div>
-                        </motion.div>
-                        <div>
-                            <motion.div
-                                className="text-2xl font-bold tracking-wide gradient-logo"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.4, delay: 0.3 }}
-                            >
-                                <h1>Groweza</h1>
-                            </motion.div>
-                            <motion.div
-                                className="text-xs text-[#a0aec0]"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.4, delay: 0.4 }}
-                            >
-                            </motion.div>
-                        </div>
-                    </motion.div>
-
-                    <AnimatePresence mode="wait">
-                        {loginMode === 'success' ? (
-                            <motion.div
-                                className="flex flex-col items-center justify-center py-10"
-                                initial="hidden"
-                                animate="visible"
-                                key="success"
-                            >
-                                <motion.div
-                                    className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mb-6"
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                                >
-                                    <svg width="40" height="40" viewBox="0 0 50 50" fill="none">
-                                        <motion.path
-                                            d="M14 27L21 34L36 16"
-                                            stroke="#4ade80"
-                                            strokeWidth="4"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            variants={checkmarkPath}
-                                        />
-                                    </svg>
-                                </motion.div>
-                                <motion.h2
-                                    className="text-2xl font-semibold mb-2 text-gray-600"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.5 }}
-                                >
-                                    Welcome Back!
-                                </motion.h2>
-                                <motion.p
-                                    className="text-center   text-gray-600"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.7 }}
-                                >
-                                    Taking you to your dashboard...
-                                </motion.p>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="login-form"
-                                initial={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                            >
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.3, duration: 0.6 }}
-                                >
-                                    <motion.h1
-                                        className="text-2xl font-bold  mb-2 text-gray-700"
-                                        initial={{ y: 10, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.2 }}
-                                    >
-                                        Welcome back
-                                    </motion.h1>
-                                    <motion.p
-                                        className="text-gray-500 text-sm mb-8"
-                                        initial={{ y: 10, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.3 }}
-                                    >
-                                        Enter your credentials to access your account
-                                    </motion.p>
-                                </motion.div>
-
-                                {loginMode === 'error' && (
-                                    <motion.div
-                                        className="mb-6 bg-red-500/20 border border-red-500/30 rounded-lg px-4 py-3 text-sm text-red-200"
-                                        initial={{ opacity: 0, y: -10, height: 0 }}
-                                        animate={{ opacity: 1, y: 0, height: 'auto' }}
-                                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                    >
-                                        <div className="flex items-center">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2">
-                                                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-                                                <path d="M12 8V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                                <circle cx="12" cy="16" r="1" fill="currentColor" />
-                                            </svg>
-                                            {errorMessage}
+                            {/* Success State */}
+                            {loginMode === 'success' ? (
+                                <div className="flex flex-col items-center justify-center py-10">
+                                    <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mb-6 relative">
+                                        <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping" />
+                                        <Check className="text-green-400" size={40} />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-white mb-2">Welcome Back!</h3>
+                                    <p className="text-gray-400 text-center">
+                                        Initializing your AI dashboard...
+                                    </p>
+                                    <div className="flex items-center space-x-2 mt-4">
+                                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+                                        <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Header */}
+                                    <div className="mb-8">
+                                        <div className="flex items-center mb-4">
+                                            <Sparkles className="text-yellow-400 mr-2" size={20} />
+                                            <span className="text-sm font-medium text-purple-300">AI-Powered Login</span>
                                         </div>
-                                    </motion.div>
-                                )}
+                                        <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+                                        <p className="text-gray-400">
+                                            Access your intelligent freelance dashboard
+                                        </p>
+                                    </div>
 
-                                <form onSubmit={handleSubmit}>
-                                    <motion.div
-                                        className="mb-5"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.4, duration: 0.5 }}
-                                    >
-                                            <label htmlFor="email" className="block text-sm font-medium  text-gray-600 mb-2">Email</label>
-                                        <motion.div
-                                            variants={inputVariants}
-                                            initial="blur"
-                                            whileFocus="focus"
-                                            whileHover={{ scale: 1.01 }}
-                                            className="relative"
-                                        >
-                                            <div className="absolute left-3 top-3.5 text-gray-700">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6ZM20 6L12 11L4 6H20ZM20 18H4V8L12 13L20 8V18Z" fill="currentColor" />
-                                                </svg>
+                                    {/* Error Message */}
+                                    {loginMode === 'error' && (
+                                        <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-2xl p-4 backdrop-blur-sm">
+                                            <div className="flex items-center text-red-400">
+                                                <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center mr-3 flex-shrink-0">
+                                                    <div className="w-2 h-2 bg-red-400 rounded-full" />
+                                                </div>
+                                                <span className="text-sm">{errorMessage}</span>
                                             </div>
-                                            <input
-                                                type="email"
-                                                id="email"
-                                                name="email"
-                                                value={credentials.email}
-                                                onChange={handleChange}
-                                                placeholder="name@company.com"
-                                                required
-                                                className="w-full pl-10 pr-4 py-3 bg-gray-100 border border-[#4a55824d] rounded-lg text-black text-sm focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-[#3683fc33] transition"
-
-                                            />
-                                        </motion.div>
-                                    </motion.div>
-
-                                    <motion.div
-                                        className="mb-5"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.5, duration: 0.5 }}
-                                    >
-                                        <div className="flex justify-between items-center mb-2">
-                                                <label htmlFor="password" className="block text-sm font-medium  text-gray-600">Password</label>
                                         </div>
-                                        <motion.div
-                                            variants={inputVariants}
-                                            initial="blur"
-                                            whileFocus="focus"
-                                            whileHover={{ scale: 1.01 }}
-                                            className="relative"
-                                        >
-                                            <div className="absolute left-3 top-3.5 text-gray-700">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM9 6C9 4.34 10.34 3 12 3C13.66 3 15 4.34 15 6V8H9V6ZM18 20H6V10H18V20ZM12 17C13.1 17 14 16.1 14 15C14 13.9 13.1 13 12 13C10.9 13 10 13.9 10 15C10 16.1 10.9 17 12 17Z" fill="currentColor" />
-                                                </svg>
+                                    )}
+
+                                    {/* Login Form */}
+                                    <div className="space-y-6">
+                                        {/* Email Field */}
+                                        <div className="space-y-2">
+                                            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+                                                Email Address
+                                            </label>
+                                            <div className="relative group">
+                                                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                                <div className="relative">
+                                                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={18} />
+                                                    <input
+                                                        type="email"
+                                                        id="email"
+                                                        name="email"
+                                                        value={credentials.email}
+                                                        onChange={handleChange}
+                                                        placeholder="demo@groweza.com"
+                                                        required
+                                                        className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 backdrop-blur-sm"
+                                                    />
+                                                </div>
                                             </div>
-                                            <input
-                                                type={showPassword ? "text" : "password"}
-                                                id="password"
-                                                name="password"
-                                                value={credentials.password}
-                                                onChange={handleChange}
-                                                placeholder="••••••••"
-                                                required
-                                                className="w-full pl-10 pr-10 py-3 bg-gray-50 border border-[#4a55824d] rounded-lg text-black text-sm focus:outline-none focus:border-purple-700 focus:ring-4 focus:ring-[#3683fc33] transition"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-3 top-3 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
-                                            >
-                                                {showPassword ? (
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M12 6C15.79 6 19.17 8.13 20.82 11.5C20.23 12.72 19.4 13.77 18.41 14.62L19.82 16.03C21.21 14.8 22.31 13.26 23 11.5C21.27 7.11 16.89 4 12 4C10.73 4 9.51 4.2 8.36 4.57L10.01 6.22C10.66 6.09 11.32 6 12 6Z" fill="currentColor" />
-                                                        <path d="M12 8C13.66 8 15 9.34 15 11C15 11.7 14.74 12.34 14.31 12.83L15.72 14.24C16.5 13.34 17 12.23 17 11C17 8.24 14.76 6 12 6C10.77 6 9.66 6.5 8.76 7.27L10.17 8.68C10.66 8.26 11.3 8 12 8Z" fill="currentColor" />
-                                                        <path d="M3.71 2.29C3.32 2.68 3.32 3.31 3.71 3.7L5.74 5.73C3.68 7.38 2.04 9.78 1 12.5C2.73 16.89 7.11 20 12 20C14.05 20 16.01 19.45 17.69 18.47L20.29 21.07C20.68 21.46 21.31 21.46 21.7 21.07C22.09 20.68 22.09 20.05 21.7 19.66L4.34 2.29C3.95 1.9 3.32 1.9 2.93 2.29L3.71 2.29ZM12 18C8.21 18 4.83 15.87 3.18 12.5C4.17 10.36 5.9 8.66 8 7.68L9.6 9.28C9.22 9.79 9 10.38 9 11C9 12.66 10.34 14 12 14C12.62 14 13.21 13.78 13.72 13.4L15.02 14.7C14.12 15.5 13.11 16 12 16V18ZM11.82 12.82C11.16 12.42 10.7 11.55 11.18 10.7C11.32 10.42 12.08 11.18 11.82 12.82Z" fill="currentColor" />
-                                                    </svg>
+                                        </div>
+
+                                        {/* Password Field */}
+                                        <div className="space-y-2">
+                                            <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+                                                Password
+                                            </label>
+                                            <div className="relative group">
+                                                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                                <div className="relative">
+                                                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={18} />
+                                                    <input
+                                                        type={showPassword ? "text" : "password"}
+                                                        id="password"
+                                                        name="password"
+                                                        value={credentials.password}
+                                                        onChange={handleChange}
+                                                        placeholder="demo123"
+                                                        required
+                                                        className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 backdrop-blur-sm"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors z-10 cursor-pointer"
+                                                    >
+                                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Sign In Button */}
+                                        <button
+                                            onClick={handleSubmit}
+                                            disabled={isLoading}
+                                            className="w-full relative group bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white py-4 rounded-2xl font-bold text-lg overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/50 cursor-pointer"
+                                        >
+                                            <span className="relative z-10 flex items-center justify-center">
+                                                {loginMode === 'loading' ? (
+                                                    <>
+                                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3" />
+                                                        Authenticating...
+                                                    </>
                                                 ) : (
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M12 4C7.11 4 2.73 7.11 1 11.5C2.73 15.89 7.11 19 12 19C16.89 19 21.27 15.89 23 11.5C21.27 7.11 16.89 4 12 4ZM12 16.5C9.24 16.5 7 14.26 7 11.5C7 8.74 9.24 6.5 12 6.5C14.76 6.5 17 8.74 17 11.5C17 14.26 14.76 16.5 12 16.5ZM12 8.5C10.34 8.5 9 9.84 9 11.5C9 13.16 10.34 14.5 12 14.5C13.66 14.5 15 13.16 15 11.5C15 9.84 13.66 8.5 12 8.5Z" fill="currentColor" />
-                                                    </svg>
+                                                    <>
+                                                        Sign In to Dashboard
+                                                        <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" size={20} />
+                                                    </>
                                                 )}
-                                            </button>
-                                        </motion.div>
-                                    </motion.div>
+                                            </span>
+                                            <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                            <div className="absolute inset-0 bg-white/10 scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
+                                        </button>
+                                    </div>
 
-                                    <motion.button
-                                        type="submit"
-                                        className="w-full py-3 bg-gradient-to-r from-purple-700 to-blue-500 text-white rounded-lg text-sm font-semibold hover:from-[#2d6cda] hover:to-[#4a7ee6] hover:-translate-y-0.5 transition mt-2 flex items-center justify-center cursor-pointer"
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.7, duration: 0.5 }}
-                                        whileHover={{
-                                            scale: 1.03,
-                                            boxShadow: "0 10px 25px -5px rgba(54, 131, 252, 0.5)",
-                                            y: -2,
-                                            transition: { type: "spring", stiffness: 400, damping: 10 }
-                                        }}
-                                        whileTap={{ scale: 0.97 }}
+                                    {/* Divider */}
+                                    <div className="flex items-center my-8">
+                                        <div className="flex-1 border-t border-white/10" />
+                                        <span className="px-4 text-xs text-gray-400">or continue with</span>
+                                        <div className="flex-1 border-t border-white/10" />
+                                    </div>
+
+                                    {/* Google Sign In */}
+                                    <button
+                                        onClick={handleGoogleLogin}
                                         disabled={isLoading}
-                                        onClick={() => {
-                                            if (loginMode === 'loading') {
-                                                // Just to prevent double submissions
-                                                return;
-                                            }
-                                        }}
+                                        className="w-full group relative bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 cursor-pointer"
                                     >
-                                        {loginMode === 'loading' ? (
-                                            <>
-                                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                                                <svg width="18" height="18" viewBox="0 0 24 24">
+                                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                                 </svg>
-                                                Signing In...
-                                            </>
-                                        ) : (
-                                            "Sign In"
-                                        )}
-                                    </motion.button>
-                                </form>
+                                            </div>
+                                            <span className="text-white font-medium">Continue with Google</span>
+                                        </div>
+                                    </button>
 
-                                <motion.div
-                                    className="flex items-center my-6 text-gray-700 text-xs"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.8, duration: 0.5 }}
-                                >
-                                    <div className="flex-1 border-t border-gray-900 mr-3"></div>
-                                    or continue with
-                                    <div className="flex-1 border-t border-gray-900 ml-3"></div>
-                                </motion.div>
-
-                                <motion.div
-                                    className="w-full flex items-center justify-center"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.9 }}
-                                >
-                                    <motion.button
-                                        onClick={() => {
-                                            setIsLoading(true);
-                                            handleGoogleLogin();
-                                        }}
-                                        className="bg-gray-200 border border-gradient-logo rounded-lg p-2.5 flex items-center justify-center 
-                                hover:bg-gray-400 hover:-translate-y-1 transition-all duration-300 w-full cursor-pointer"
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.8, type: "spring", stiffness: 400, damping: 15 }}
-                                        
-                                        aria-label="Sign in with Google"
-                                    >
-                                        <img src="/Google-.png" alt="Google" width="35" height="35" />
-                                    </motion.button>
-                                </motion.div>
-
-                                <motion.div
-                                    className="text-center mt-8 text-sm text-gray-600"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 1.1, duration: 0.5 }}
-                                >
-                                    Don't have an account? {' '}
-                                    <motion.a
-                                        href="#"
-                                        className="text-purple-500 font-medium hover:underline inline-flex items-center"
-                                        whileHover={{ scale: 1.05, color: "#5f95ff" }}
-                                    >
-                                        <a href='/signup'> Sign up </a>
-                                        <svg className="ml-1 w-3 h-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M9 5L15 12L9 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </motion.a>
-                                </motion.div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                    {/* Sign Up Link */}
+                                    <div className="text-center mt-8">
+                                        <p className="text-gray-400">
+                                            Don't have an account?{' '}
+                                            <a
+                                                href="/signup"
+                                                className="text-purple-400 hover:text-purple-300 font-medium inline-flex items-center group transition-colors"
+                                            >
+                                                Sign up for free
+                                                <ChevronRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                                            </a>
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </motion.div>
 
+                {/* Trust Indicators */}
+                <div className="mt-8 flex items-center justify-center space-x-6 text-xs text-gray-500">
+                    <div className="flex items-center space-x-1">
+                        <Shield size={12} />
+                        <span>256-bit SSL</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                        <span>99.9% Uptime</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                        <Brain size={12} />
+                        <span>AI-Secured</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Custom Styles */}
+            <style jsx>{`
+        @keyframes gradientFloat {
+          0%, 100% { 
+            transform: translateY(0px) scale(1);
+            opacity: 0.3;
+          }
+          50% { 
+            transform: translateY(-20px) scale(1.05);
+            opacity: 0.5;
+          }
+        }
+
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+
+        /* Enhanced scrollbar */
+        ::-webkit-scrollbar {
+          width: 3px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: linear-gradient(45deg, #a855f7, #ec4899);
+          border-radius: 10px;
+        }
+
+        /* Input focus glow */
+        input:focus {
+          box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        }
+
+        /* Button hover glow */
+        button:hover:not(:disabled) {
+          box-shadow: 0 10px 40px rgba(168, 85, 247, 0.4);
+        }
+      `}</style>
         </div>
-
     );
 };
 
 export default EnhancedLogin;
+
+
+
+

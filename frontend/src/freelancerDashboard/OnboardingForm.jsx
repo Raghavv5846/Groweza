@@ -230,6 +230,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const skillsOptions = ['React', 'Node.js', 'MongoDB', 'Tailwind', 'UI/UX', 'Python'];
 const workTypes = ['Web Development', 'UI/UX Design', 'App Development', 'DevOps'];
@@ -320,11 +321,11 @@ export default function OnboardingForm() {
 
  
 
-            alert('Profile updated successfully');
+            toast.success('Profile updated successfully');
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
-            alert('Failed to submit form');
+            toast.error('Failed to submit form');
         } finally {
             setLoading(false);
         }

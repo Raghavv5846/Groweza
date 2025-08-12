@@ -32,6 +32,7 @@ import BillingManagement from './freelancerDashboard/BillingManagement'
 import InvoiceTable from './freelancerDashboard/AllInvoice'
 import ProposalTable from './freelancerDashboard/AllProposal'
 import FreelanceDashboard from './freelancerDashboard/FreelancerDashboard'
+import GrowezaLanding from './publicPages/HomePage'
 
 
 function App() {
@@ -47,7 +48,7 @@ function App() {
   return (
 <BrowserRouter>
 <Routes>
-  <Route path="/" element={<Landing />} />
+  <Route path="/" element={<GrowezaLanding />} />
   <Route path="/about" element={<About />} />
   <Route path="/contact" element={<Contact />} />
   <Route path="/privacy" element={<Privacy />} />

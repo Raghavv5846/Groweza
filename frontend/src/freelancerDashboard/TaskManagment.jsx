@@ -423,7 +423,7 @@ const TaskManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 w-[90%]">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 w-full px-20">
       <div className=" mx-auto">
         <div className="animate-fade-in">
           <div className="text-center mb-8 mt-8 animate-slide-down">
