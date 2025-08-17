@@ -34,7 +34,7 @@ import ProposalTable from './freelancerDashboard/AllProposal'
 import FreelanceDashboard from './freelancerDashboard/FreelancerDashboard'
 import GrowezaLanding from './publicPages/HomePage'
 import SubscriptionDashboard from './freelancerDashboard/SubscriptionManagement'
-import SubscriptionSuccess from './freelancerDashboard/subscriptionSuccess'
+import SubscriptionSuccess from './freelancerDashboard/SubscriptionSuccess'
 import SubscriptionFailure from './freelancerDashboard/SubscriptionFailure'
 
 
