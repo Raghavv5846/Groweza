@@ -1,27 +1,179 @@
+// import bcrypt from 'bcrypt';
+// import jwt from 'jsonwebtoken';
+// import axios from 'axios';;
+// import User from '../model/userModel.js';
+// import { sendWelcomeEmail } from '../config/sendWelcomeMail.js';
+// import oauth2Client from '../config/googleAuth.js';
+
+// export const signUp = async (req, res) => {
+//     const { name, email, password, role } = req.body;
+
+//     if (!name || !email || !password || password.length < 2) {
+//         return res.status(400).json({ message: "Invalid input data." });
+//     }
+
+//     try {
+//         const existingUser = await User.findOne({ email });
+//         if (existingUser) {
+//             return res.status(400).json({ message: "Email already registered." });
+//         }
+
+//         // Hash Password
+//         const hashedPassword = await bcrypt.hash(password, 10);
+
+//         // Default role is freelancer
+//         const userRole = role === "admin" ? "admin" : "freelancer";
+
+//         const newUser = new User({
+//             name,
+//             email,
+//             password: hashedPassword,
+//             role: userRole,
+//             isVerified: true, // No OTP now
+//         });
+
+//         await newUser.save();
+
+//         // Send Welcome Email
+//         await sendWelcomeEmail(email, name);
+
+//         // Generate JWT Token
+//         const token = jwt.sign(
+//             { userId: newUser._id, role: newUser.role },
+//             process.env.JWT_SECRET,
+//             { expiresIn: "7d" }
+//         );
+
+//         res.status(201).json({
+//             message: "User registered successfully!",
+//             token,
+//             role: newUser.role,
+//         });
+//     } catch (error) {
+//         console.log("SignUp Error:", error.message);
+//         res.status(500).json({ message: "Server Error" });
+//     }
+// };
+
+
+
+import validator from "validator";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';;
 import User from '../model/userModel.js';
 import { sendWelcomeEmail } from '../config/sendWelcomeMail.js';
 import oauth2Client from '../config/googleAuth.js';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const disposableDomainsPath = path.join(
+    __dirname,
+    "../node_modules/disposable-email-domains/index.json"
+);
+
+const disposableDomains = JSON.parse(
+    fs.readFileSync(disposableDomainsPath, "utf-8")
+);
+
+
+// export const signUp = async (req, res) => {
+//     const { name, email, password, role } = req.body;
+
+//     // Basic validation
+//     if (!name || !email || !password || password.length < 2) {
+//         return res.status(400).json({ message: "Invalid input data." });
+//     }
+
+//     // Email format validation
+//     if (!validator.isEmail(email)) {
+//         return res.status(400).json({ message: "Invalid email format." });
+//     }
+
+//     // Check if email is from a disposable domain
+//     const domain = email.split("@")[1].toLowerCase();
+//     if (disposableDomains.includes(domain)) {
+//         return res.status(400).json({ message: "Disposable/temporary emails are not allowed." });
+//     }
+
+//     try {
+//         // Check if user already exists
+//         const existingUser = await User.findOne({ email });
+//         if (existingUser) {
+//             return res.status(400).json({ message: "Email already registered." });
+//         }
+
+//         // Hash Password
+//         const hashedPassword = await bcrypt.hash(password, 10);
+
+//         // Default role is freelancer unless admin specified
+//         const userRole = role === "admin" ? "admin" : "freelancer";
+
+//         const newUser = new User({
+//             name,
+//             email,
+//             password: hashedPassword,
+//             role: userRole,
+//             isVerified: true, // No OTP for now
+//         });
+
+//         await newUser.save();
+
+//         // Send Welcome Email
+//         await sendWelcomeEmail(email, name);
+
+//         // Generate JWT Token
+//         const token = jwt.sign(
+//             { userId: newUser._id, role: newUser.role },
+//             process.env.JWT_SECRET,
+//             { expiresIn: "7d" }
+//         );
+
+//         res.status(201).json({
+//             message: "User registered successfully!",
+//             token,
+//             role: newUser.role,
+//         });
+
+//     } catch (error) {
+//         console.log("SignUp Error:", error.message);
+//         res.status(500).json({ message: "Server Error" });
+//     }
+// };
 
 export const signUp = async (req, res) => {
     const { name, email, password, role } = req.body;
 
+    // Basic validation
     if (!name || !email || !password || password.length < 2) {
         return res.status(400).json({ message: "Invalid input data." });
     }
 
+    // Email format validation
+    if (!validator.isEmail(email)) {
+        return res.status(400).json({ message: "Invalid email format." });
+    }
+
+    // Check for disposable/temp email
+    const domain = email.split("@")[1].toLowerCase();
+    if (disposableDomains.includes(domain)) {
+        return res.status(400).json({ message: "Disposable/temporary emails are not allowed." });
+    }
+
     try {
+        // Check if email already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "Email already registered." });
         }
 
-        // Hash Password
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Default role is freelancer
         const userRole = role === "admin" ? "admin" : "freelancer";
 
         const newUser = new User({
@@ -29,15 +181,15 @@ export const signUp = async (req, res) => {
             email,
             password: hashedPassword,
             role: userRole,
-            isVerified: true, // No OTP now
+            isVerified: true,
         });
 
         await newUser.save();
 
-        // Send Welcome Email
+        // Send welcome email
         await sendWelcomeEmail(email, name);
 
-        // Generate JWT Token
+        // Generate JWT
         const token = jwt.sign(
             { userId: newUser._id, role: newUser.role },
             process.env.JWT_SECRET,
@@ -49,12 +201,12 @@ export const signUp = async (req, res) => {
             token,
             role: newUser.role,
         });
+
     } catch (error) {
-        console.log("SignUp Error:", error.message);
+        console.error("SignUp Error:", error.message);
         res.status(500).json({ message: "Server Error" });
     }
 };
-
 
 export const login = async (req, res) => {
     const { email, password } = req.body;

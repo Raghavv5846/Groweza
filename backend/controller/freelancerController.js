@@ -1,6 +1,8 @@
 import cloudinary from '../config/cloudinary.js';
 import User from "../model/userModel.js"
 import fs from 'fs';
+import streamifier from "streamifier";
+import { v2 as cloudinaryy } from "cloudinary";
 
 
 // export const completeOnboarding = async (req, res) => {
@@ -128,7 +130,7 @@ import fs from 'fs';
 // };
 
 
-
+import { logActivity } from '../config/logActivity.js'; // import logger
 export const completeOnboarding = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -158,7 +160,7 @@ export const completeOnboarding = async (req, res) => {
         // If image is uploaded (memoryStorage)
         if (req.file && req.file.buffer) {
             const result = await new Promise((resolve, reject) => {
-                cloudinary.uploader.upload_stream(
+                cloudinaryy.uploader.upload_stream(
                     { folder: 'freelancer_profiles', width: 300, crop: 'scale' },
                     (error, uploaded) => {
                         if (error) return reject(error);
@@ -191,6 +193,14 @@ export const completeOnboarding = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        await logActivity(
+            req.user._id,
+            "ONBOARDING_COMPLETED",
+            `Freelancer ${updatedUser.name} completed onboarding`,
+            { freelancerId: updatedUser._id }
+        );
+
+
         res.status(200).json({
             message: 'Onboarding completed successfully',
             user: updatedUser,
@@ -211,46 +221,102 @@ export const getFreelancer = async (req, res) => {
 
 
 
+// export const uploadInvoiceLogo = async (req, res) => {
+//     try {
+//         const userId = req.user.userId;
+
+
+//         if (!req.file) {
+//             return res.status(400).json({ message: 'No image file provided.' });
+//         }
+
+
+//         // Upload to Cloudinary
+//         const result = await cloudinary.uploader.upload(req.file.path, {
+//             folder: 'invoice-logos',
+//         });
+
+
+
+//         // Delete the local file after upload
+//         fs.unlinkSync(req.file.path);
+
+//         // Update user record
+//         const user = await User.findByIdAndUpdate(
+//             userId,
+//             { invoiceLogo: result.secure_url },
+//             { new: true }
+//         );
+
+//         await logActivity(
+//             req.user._id,
+//             "INVOICE_LOGO_UPLOADED",
+//             `Uploaded a new invoice logo`,
+//             { logoUrl: result.secure_url }
+//         );
+
+
+
+
+//         res.status(200).json({
+//             message: 'Invoice logo uploaded successfully.',
+//             logoUrl: result.secure_url,
+//             user,
+//         });
+//     } catch (err) {
+//         console.error('Upload error:', err);
+//         res.status(500).json({ message: 'Server error during logo upload.' });
+//     }
+// };
+
 export const uploadInvoiceLogo = async (req, res) => {
     try {
-        const userId = req.user.userId;
-
-
         if (!req.file) {
-            return res.status(400).json({ message: 'No image file provided.' });
+            return res.status(400).json({ message: "No image file provided." });
         }
 
+        // Function to upload using a buffer stream
+        const streamUpload = (fileBuffer) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { folder: "invoice-logos" },
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                streamifier.createReadStream(fileBuffer).pipe(stream);
+            });
+        };
 
-        // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'invoice-logos',
-        });
+        // Upload buffer to Cloudinary
+        const result = await streamUpload(req.file.buffer);
 
-
-
-        // Delete the local file after upload
-        fs.unlinkSync(req.file.path);
-
-        // Update user record
+        // Update DB
         const user = await User.findByIdAndUpdate(
-            userId,
+            req.user.userId,
             { invoiceLogo: result.secure_url },
             { new: true }
         );
 
-
+        // Log activity
+        await logActivity(
+            req.user._id,
+            "INVOICE_LOGO_UPLOADED",
+            "Uploaded a new invoice logo",
+            { logoUrl: result.secure_url }
+        );
 
         res.status(200).json({
-            message: 'Invoice logo uploaded successfully.',
+            message: "Invoice logo uploaded successfully.",
             logoUrl: result.secure_url,
             user,
         });
     } catch (err) {
-        console.error('Upload error:', err);
-        res.status(500).json({ message: 'Server error during logo upload.' });
+        console.error("Upload error:", err);
+        res.status(500).json({ message: "Server error during logo upload." });
     }
 };
-
 export const updateFreelancerProfile = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -295,6 +361,14 @@ export const updateFreelancerProfile = async (req, res) => {
         if (!updatedUser) {
             return res.status(404).json({ message: "User not found" });
         }
+
+        await logActivity(
+            req.user._id,
+            "PROFILE_UPDATED",
+            `Freelancer ${freelancer.name} updated their profile`,
+            { freelancerId: freelancer._id }
+        );
+
 
         res.status(200).json({
             message: "Freelancer profile updated successfully",

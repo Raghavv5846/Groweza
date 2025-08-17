@@ -1,5 +1,6 @@
 import Testimonial from '../model/TestimonialModel.js';
 import cloudinary from '../config/cloudinary.js';
+import { logActivity } from '../config/logActivity.js';
 
 // ➕ Create a testimonial
 export const createTestimonial = async (req, res) => {
@@ -44,6 +45,10 @@ export const createTestimonial = async (req, res) => {
                 rating,
             });
             await newTestimonial.save();
+
+            await logActivity(freelancerId, "TESTIMONIAL_CREATED", `Testimonial from ${clientName} added`, { testimonialId: newTestimonial._id });
+
+
             res.status(201).json(newTestimonial);
         }
     } catch (err) {
@@ -90,6 +95,11 @@ export const updateTestimonial = async (req, res) => {
         } else {
             const updated = await Testimonial.findByIdAndUpdate(testimonialId, updates, { new: true });
             if (!updated) return res.status(404).json({ message: 'Testimonial not found' });
+
+            await logActivity(req.user.userId, "TESTIMONIAL_UPDATED", `Testimonial from ${updates.clientName || 'unknown'} updated`, { testimonialId });
+
+
+
             res.status(200).json(updated);
         }
     } catch (err) {
@@ -103,6 +113,10 @@ export const deleteTestimonial = async (req, res) => {
     try {
         const testimonialId = req.params.id;
         await Testimonial.findByIdAndDelete(testimonialId);
+
+        await logActivity(req.user.userId, "TESTIMONIAL_DELETED", `Deleted testimonial ${testimonialId}`, { testimonialId });
+
+
         res.status(200).json({ message: 'Testimonial deleted' });
     } catch (err) {
         console.error('Error deleting testimonial:', err);

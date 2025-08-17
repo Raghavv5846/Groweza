@@ -1017,10 +1017,17 @@ const FreelancerProfile = () => {
 
   if (loading) {
     return (
-    <div className="min-h-screen w-[90%] bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 text-lg">Loading your profile...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 w-full">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+              ))}
+            </div>
+            <div className="h-64 bg-gray-200 rounded-xl"></div>
+          </div>
         </div>
       </div>
     );

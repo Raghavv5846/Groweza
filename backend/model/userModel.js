@@ -47,24 +47,39 @@ const clientSchema = new mongoose.Schema({
     works: [workSchema],
 });
 
-const subscriptionSchema = new mongoose.Schema( {
-    id: String,
-    plan: {
-        type: String,
-        enum: ['Basic', 'Premium'],
-    },
-    status: {
-        type: String,
-        enum: ['ACTIVE', 'CANCELLED', 'EXPIRED', 'SUSPENDED'],
-    },
-    startDate: Date,
-    nextBillingDate: Date,
-    lastUpdated: {
-        type: Date,
-        default: Date.now,
-    },
-})
+const subscriptionSchema = new mongoose.Schema(
+    {
+        id: { type: String }, // PayPal/Stripe subscription ID (I-XXXX / sub_XXXX)
+        plan: { type: String, enum: ["Basic", "Premium"], required: true },
+        active: { type: Boolean, default: true },
+        startedAt: { type: Date, default: Date.now },
+        expiresAt: { type: Date },
 
+        limits: {
+            clients: {
+                used: { type: Number, default: 0 },
+                max: { type: Number, default: 15 },
+                resetAt: { type: Date },
+            },
+            invoices: {
+                used: { type: Number, default: 0 },
+                max: { type: Number, default: 20 },
+                resetAt: { type: Date },
+            },
+            proposals: {
+                used: { type: Number, default: 0 },
+                max: { type: Number, default: 16 },
+                resetAt: { type: Date },
+            },
+            meetings: {
+                used: { type: Number, default: 0 },
+                max: { type: Number, default: 3 },
+                resetAt: { type: Date },
+            },
+        },
+    },
+    { _id: false } // prevents MongoDB from auto-generating _id for each subscription entry
+);
 
 const userSchema = new mongoose.Schema(
     {
@@ -141,7 +156,9 @@ const userSchema = new mongoose.Schema(
 
         clients: [clientSchema],
 
-        subscription: [subscriptionSchema],
+        // 🚀 Now an array of subscription objects
+        subscriptions: [subscriptionSchema],
+
     },
     { timestamps: true }
 );

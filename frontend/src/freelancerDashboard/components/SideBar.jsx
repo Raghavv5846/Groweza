@@ -40,7 +40,7 @@ export default function SideBar({ mobile = false, closeMobile }) {
                     }}
                     className="p-2 text-gray-600 hover:text-blue-600 transition"
                 >
-                    <FaBars className="cursor-pointer"/>
+                    <FaBars className="text-2xl cursor-pointer"/>
                 </button>
             </div>
 

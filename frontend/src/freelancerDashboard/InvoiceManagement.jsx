@@ -244,6 +244,8 @@ import { TemplateCorporate } from './invoiceTemplates/CorporateGride';
 import { TemplateElegant } from './invoiceTemplates/ElegantCard';
 import TemplateClassic from './invoiceTemplates/TemplateClassic';
 import InvoiceLogoUploader from './components/LogoUploader';
+import { Check, Crown, X, Zap } from 'lucide-react';
+import { isLimitReached } from '../helpers/CheckLimit';
 
 // Template components mapping for dynamic rendering
 const templateComponents = {
@@ -253,6 +255,10 @@ const templateComponents = {
   Elegant: TemplateElegant,
   Classic: TemplateClassic,
 };
+// Define allowed templates
+const basicTemplates = ["Minimal", "Colorful"];
+const premiumTemplates = ["Corporate", "Elegant", "Classic"];
+
 
 const InvoiceManagement = () => {
   // State management for component data
@@ -265,9 +271,59 @@ const InvoiceManagement = () => {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [subscription, setSubscription] = useState(null);
 
   // Get authentication token from localStorage
   const token = localStorage.getItem('authToken');
+
+
+  // Fetch Subscription =>
+  // need to see if it works tomorrow 
+  useEffect(() => {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+          return;
+      }
+
+      axios
+          .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/freelancer/me`, {
+              headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((res) => setUser(res.data))
+          .catch(() => setUser(null))
+  }, []);
+  const isInvoicesLimitReached = isLimitReached(user, "invoices");
+
+
+  // find active subscription (PayPal/Stripe etc.)
+  const activeSub = user?.subscriptions?.find(sub => sub.active);
+
+  // check premium
+  const isPremium =
+    activeSub?.plan === "Premium" || user?.subscription?.plan === "Premium";
+
+  // check if a premium-only template is selected but user is not premium
+  const isPremiumTemplateSelected =
+    premiumTemplates.includes(template) && !isPremium;
+
+
+  // useEffect(() => {
+  //   axios
+  //     .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/subscription/me`)
+  //     .then((res) => setSubscription(res.data))
+  //     .catch((err) => console.error("Error fetching subscription:", err));
+  // }, []);
+
+  // const isInvoicesLimitReached =
+  //   subscription?.limits?.invoices?.used >= subscription?.limits?.invoices?.max;
+
+  // const isPremium = subscription?.plan === "Premium";
+  // const isPremiumTemplateSelected =
+  //   premiumTemplates.includes(template) && !isPremium;
+
+
+
 
   // Fetch user data and clients from API
   const fetchUserAndClients = async () => {
@@ -662,7 +718,7 @@ const InvoiceManagement = () => {
                   </div>
 
                   {/* Template Selection */}
-                  <div className="mb-6">
+                  {/* <div className="mb-6">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Select Template</label>
                     <select
                       className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white cursor-pointer"
@@ -672,6 +728,23 @@ const InvoiceManagement = () => {
                       {Object.keys(templateComponents).map((key) => (
                         <option key={key} value={key}>
                           {key}
+                        </option>
+                      ))}
+                    </select>
+                  </div> */}
+
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Select Template
+                    </label>
+                    <select
+                      className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white cursor-pointer"
+                      value={template}
+                      onChange={(e) => setTemplate(e.target.value)}
+                    >
+                      {Object.keys(templateComponents).map((key) => (
+                        <option key={key} value={key} disabled={!isPremium && premiumTemplates.includes(key)}>
+                          {key} {!isPremium && premiumTemplates.includes(key) ? "🔒" : ""}
                         </option>
                       ))}
                     </select>
@@ -700,7 +773,30 @@ const InvoiceManagement = () => {
                       </svg>
                       WhatsApp
                     </button> */}
-                    <button
+                    {/* <button
+                      onClick={() =>
+                        isInvoicesLimitReached ? setShowUpgradeModal(true) :                   
+                      }
+                      disabled={false} // still clickable, just changes behavior
+                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-200 transform active:scale-95 shadow-lg ${isInvoicesLimitReached
+                        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                        : "flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer"
+                        }`}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      {isInvoicesLimitReached ? "Upgrade to Unlock" :  <button
                       onClick={()=>{sendInvoiceToClient ({ clientName: client.name, clientEmail: client.email })}}
                       className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                     >
@@ -733,8 +829,199 @@ const InvoiceManagement = () => {
                           Save
                         </>
                       )}
+                    </button>}
+                    </button> */}
+
+                    {/* Invoice Action Button / Upgrade Button */}
+                    {/* <button
+                      onClick={() =>
+                        isInvoicesLimitReached ? setShowUpgradeModal(true) : null
+                      }
+                      disabled={false}
+                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-200 transform active:scale-95 shadow-lg ${isInvoicesLimitReached
+                          ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          : "bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer"
+                        }`}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      {isInvoicesLimitReached ? (
+                        "Upgrade to Unlock"
+                      ) : (
+                        "Invoice Actions"
+                      )}
+                    </button> */}
+
+                    {/* Only show these actions if NOT limited */}
+                    {/* {!isInvoicesLimitReached && (
+                      <div className="flex gap-3 mt-3">
+                        {/* Email */}
+                        {/* <button
+                          onClick={() =>
+                            sendInvoiceToClient({ clientName: client.name, clientEmail: client.email })
+                          }
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                          </svg>
+                          Email
+                        </button> */ }
+
+                        {/* Download */}
+                        {/* <button
+                          onClick={handleDownloadPDF}
+                          className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                            />
+                          </svg>
+                          Download
+                        </button> */}
+
+                        {/* Save */}
+                        {/* <button
+                          onClick={handleSaveInvoice}
+                          disabled={isLoading}
+                          className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {isLoading ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                                />
+                              </svg>
+                              Save
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )} */}
+
+
+                    {/* <button
+                      onClick={()=>{sendInvoiceToClient ({ clientName: client.name, clientEmail: client.email })}}
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      Email
                     </button>
+                    <button
+                      onClick={handleDownloadPDF}
+                      className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      Download
+                    </button>
+                    <button
+                      onClick={handleSaveInvoice}
+                      disabled={isLoading}
+                      className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {isLoading ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                          </svg>
+                          Save
+                        </>
+                      )}
+                    </button> */}
                   </div>
+
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <button
+                      onClick={() =>
+                        isPremiumTemplateSelected
+                          ? setShowUpgradeModal(true) // Show upgrade modal
+                          : isInvoicesLimitReached
+                            ? setShowUpgradeModal(true)
+                            : null
+                      }
+                      disabled={isPremiumTemplateSelected || isInvoicesLimitReached}
+                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-200 transform active:scale-95 shadow-lg ${isPremiumTemplateSelected || isInvoicesLimitReached
+                          ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          : "bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer"
+                        }`}
+                    >
+                      {isPremiumTemplateSelected
+                        ? "Premium Only 🔒"
+                        : isInvoicesLimitReached
+                          ? "Upgrade to Unlock"
+                          : "Invoice Actions"}
+                    </button>
+
+                    {/* Show Email/Download/Save ONLY if template is valid */}
+                    {!isPremiumTemplateSelected && !isInvoicesLimitReached && (
+                      <div className="flex gap-3 mt-3">
+                        {/* Email */}
+                        <button
+                          onClick={() =>
+                            sendInvoiceToClient({ clientName: client.name, clientEmail: client.email })
+                          }
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          📧 Email
+                        </button>
+
+                        {/* Download */}
+                        <button
+                          onClick={handleDownloadPDF}
+                          className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          ⬇️ Download
+                        </button>
+
+                        {/* Save */}
+                        <button
+                          onClick={handleSaveInvoice}
+                          disabled={isLoading}
+                          className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {isLoading ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            "💾 Save"
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                 </div>
               )}
             </div>
@@ -786,6 +1073,88 @@ const InvoiceManagement = () => {
           </div>
         </div>
       </div>
+
+      {/* upgrade modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden">
+            {/* Header with Gradient */}
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white relative">
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="absolute top-4 right-4 p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all duration-200"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full mb-4">
+                  <Crown size={32} className="text-yellow-300" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Upgrade Required</h2>
+                <p className="text-purple-100 opacity-90">
+                  Unlock unlimited potential with Professional
+                </p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <p className="text-gray-600 text-sm mb-4">
+                  You've reached the limit for adding clients in the <span className="font-semibold text-gray-800">Basic Plan</span>.
+                </p>
+
+                {/* Features List */}
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-4 mb-6">
+                  <h3 className="font-semibold text-gray-800 mb-3 flex items-center justify-center gap-2">
+                    <Zap size={16} className="text-purple-600" />
+                    Professional Features
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    {[
+                      'Unlimited clients & meetings',
+                      'Advanced scheduling tools',
+                      'Custom branding options',
+                      'Priority support'
+                    ].map((feature, index) => (
+                      <div key={index} className="flex items-center gap-2 text-gray-700">
+                        <div className="w-4 h-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+                          <Check size={10} className="text-white" />
+                        </div>
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium cursor-pointer"
+                >
+                  Maybe Later
+                </button>
+                <button
+                  onClick={() => alert("Redirect to PayPal/Upgrade Flow")}
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+
+              {/* Trust Badge */}
+              <div className="text-center mt-4">
+                <p className="text-xs text-gray-500">
+                  🔒 Secure payment • Cancel anytime
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Loading Overlay */}
       {isLoading && (

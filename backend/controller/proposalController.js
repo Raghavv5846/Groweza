@@ -4,6 +4,7 @@ import { OpenAI } from 'openai';
 import Proposal from "../model/proposalModel.js";
 import cloudinary from "../config/cloudinary.js";
 import User from "../model/userModel.js";
+import { incrementUsage } from '../helpers/usageUpdation.js';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -87,6 +88,9 @@ Follow a professional tone and keep the text persuasive yet clear.
                 rawOutput: content, // send raw for debugging on frontend if needed
             });
         }
+
+        await incrementUsage(req.user.userId, "proposals");
+
 
         // Step 5: Send structured proposal back to frontend
         res.status(200).json({

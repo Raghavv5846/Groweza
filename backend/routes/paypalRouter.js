@@ -9,6 +9,7 @@ import {
     handleWebhook,
     createSubscription,
     createPlan,
+    saveSubscription,
 } from '../controller/paypalController.js';
 import {authenticate} from '../middleWare/authMiddleware.js';
 
@@ -22,5 +23,6 @@ router.post('/create-order', authenticate, createOrder);
 router.post('/capture-order/:orderId', authenticate, captureOrder);
 router.post('/cancel-auto-renewal/:subscriptionId', authenticate, cancelAutoRenewal);
 router.post('/webhook', handleWebhook);
+router.post("/save-subscription", authenticate, saveSubscription); // 👈 new
 
 export default router;

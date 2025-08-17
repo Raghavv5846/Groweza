@@ -1,22 +1,22 @@
-import invoiceModel from "../model/invoiceModel.js";
+// import invoiceModel from "../model/invoiceModel.js";
 import User from "../model/userModel.js";
 import Invoice from '../model/invoiceModel.js';
-import { v4 as uuidv4 } from 'uuid';
 import mongoose from 'mongoose';
 import { sendInvoiceEmail } from "../config/invoiceSender.js";
+import { logActivity } from '../config/logActivity.js';
+import { incrementUsage } from "../helpers/usageUpdation.js";
 
+// ✅ Create Invoice
 export const createInvoice = async (req, res) => {
     try {
-        const { clientId, workId, amount, notes , invoiceNumber } = req.body;
+        const { clientId, workId, amount, notes, invoiceNumber } = req.body;
 
-        // Optional: Validate that the client and work exist
         const freelancer = await User.findById(req.user.userId);
         const client = freelancer.clients.id(clientId);
         if (!client) return res.status(404).json({ message: 'Client not found' });
 
         const work = client.works.id(workId);
         if (!work) return res.status(404).json({ message: 'Work not found under this client' });
-
 
         const newInvoice = await invoiceModel.create({
             freelancerId: req.user.userId,
@@ -27,14 +27,25 @@ export const createInvoice = async (req, res) => {
             notes,
         });
 
+        // ✅ Log activity
+        await logActivity(
+            req.user.userId,
+            "INVOICE_CREATED",
+            `Created invoice #${invoiceNumber} for client ${client.name}`,
+            { invoiceId: newInvoice._id }
+        );
+
+        await incrementUsage(req.user.userId, "invoices");
+
+
         res.status(201).json({ message: 'Invoice created', invoice: newInvoice });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Failed to create invoice' });
     }
 };
-  
 
+// ✅ Get All Invoices
 export const getAllInvoicesForFreelancer = async (req, res) => {
     const { freelancerId } = req.params;
 
@@ -43,17 +54,13 @@ export const getAllInvoicesForFreelancer = async (req, res) => {
     }
 
     try {
-        // Fetch all invoices of this freelancer
         const invoices = await Invoice.find({ freelancerId }).sort({ generatedAt: -1 });
-
-        // Get freelancer and their clients (embedded)
         const freelancer = await User.findById(freelancerId).select('name email invoiceLogo clients');
 
         if (!freelancer) {
             return res.status(404).json({ error: 'Freelancer not found' });
         }
 
-        // Map each invoice to include client + work details
         const enrichedInvoices = invoices.map((invoice) => {
             const client = freelancer.clients.find(
                 (c) => c._id.toString() === invoice.clientId.toString()
@@ -71,7 +78,6 @@ export const getAllInvoicesForFreelancer = async (req, res) => {
                 notes: invoice.notes,
                 pdfUrl: invoice.pdfUrl,
                 generatedAt: invoice.generatedAt,
-
                 client: client
                     ? {
                         name: client.name,
@@ -80,7 +86,6 @@ export const getAllInvoicesForFreelancer = async (req, res) => {
                         phone: client.phone,
                     }
                     : null,
-
                 work: work || null,
             };
         });
@@ -100,7 +105,6 @@ export const getAllInvoicesForFreelancer = async (req, res) => {
     }
 };
 
-
 // ✅ Update Invoice Status
 export const updateInvoiceStatus = async (req, res) => {
     try {
@@ -113,12 +117,19 @@ export const updateInvoiceStatus = async (req, res) => {
         invoice.status = status;
         await invoice.save();
 
+        // ✅ Log activity
+        await logActivity(
+            req.user.userId,
+            "INVOICE_STATUS_UPDATED",
+            `Invoice #${invoice.invoiceNumber} status changed to ${status}`,
+            { invoiceId: invoice._id }
+        );
+
         res.status(200).json({ message: 'Invoice status updated', invoice });
     } catch (err) {
         res.status(500).json({ message: 'Failed to update status' });
     }
-  };
-
+};
 
 // ✅ Send Invoice Email
 export const sendInvoiceToClient = async (req, res) => {
@@ -131,13 +142,11 @@ export const sendInvoiceToClient = async (req, res) => {
     }
 
     try {
-        // 1. Get freelancer data from the JWT
         const freelancer = await User.findById(req.user.userId);
         if (!freelancer) {
             return res.status(404).json({ message: 'Freelancer not found.' });
         }
 
-        // 2. Compose detailed email message
         const freelancerName = freelancer.name || 'Freelancer';
         const freelancerEmail = freelancer.email || 'Not Provided';
         const freelancerPhone = freelancer.phone || 'Not Provided';
@@ -162,10 +171,7 @@ Thanks for your business!
 Warm regards,  
 ${freelancerName}  
 ${freelancerEmail}
-    `.trim();
-
-        // 3. Send email with attachment
-        console.log(`Sending invoice to ${clientEmail}...`);
+        `.trim();
 
         await sendInvoiceEmail({
             to: clientEmail,
@@ -179,11 +185,17 @@ ${freelancerEmail}
             ],
         });
 
+        // ✅ Log activity
+        await logActivity(
+            req.user.userId,
+            "INVOICE_SENT",
+            `Sent invoice to ${clientEmail}`,
+            { clientEmail }
+        );
+
         return res.status(200).json({ message: 'Invoice sent successfully.' });
     } catch (err) {
         console.error('Email send error:', err);
         return res.status(500).json({ message: 'Failed to send invoice.' });
     }
 };
-
-

@@ -341,7 +341,7 @@ export default function TopBar({ profile, onMobileMenuClick }) {
             {/* Right: Currency Selector + User Menu */}
             <div className="flex items-center gap-3 sm:gap-4">
                 {/* Currency Selector (hidden on very small screens) */}
-                <select
+                {/* <select
                     className="hidden sm:block border border-gray-300 px-2 sm:px-3 py-1 rounded-md text-sm sm:text-base 
                      bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 
                      focus:border-blue-500 transition-all duration-300 shadow-sm hover:shadow-md"
@@ -349,7 +349,7 @@ export default function TopBar({ profile, onMobileMenuClick }) {
                     <option>$ USD</option>
                     <option>₹ INR</option>
                     <option>€ EUR</option>
-                </select>
+                </select> */}
 
                 {/* Profile Dropdown */}
                 <DropdownMenu>
@@ -388,7 +388,9 @@ export default function TopBar({ profile, onMobileMenuClick }) {
                                 label: "Billing",
                                 color: "green-500",
                                 path: "/dashboard/my-billings"
-                            }
+                            },
+                            { label: "Subscription", color: "red-500", path: "/dashboard/my-subscriptions" },
+
                         ].map((item) => (
                             <DropdownMenuItem
                                 key={item.label}
@@ -403,6 +405,8 @@ export default function TopBar({ profile, onMobileMenuClick }) {
                                 </span>
                             </DropdownMenuItem>
                         ))}
+
+                        
 
                         <DropdownMenuSeparator className="bg-gray-100 my-2" />
 

@@ -18,12 +18,15 @@ import meetingRouter from "./routes/meetingRouter.js";
 import availabilityRouter from "./routes/availabilityRouter.js";
 import paypalRouter from './routes/paypalRouter.js';
 import  portfolioRouter from "./routes/portfolioRouter.js";
-import dashBoardRouter from "./routes/dashboardRouter.js"
+import dashBoardRouter from "./routes/dashboardRouter.js";
+import activityRouter from "./routes/activityRouter.js";
+
 
 
 // cron-job
 import "./cron-job/dailyWorkReminder.js"; // Daily work reminder job
-
+import "./cron-job/useageReset.js"; // Monthly usage reset job
+import "./cron-job/meetingReminder.js";
 
 app.use(cors());
 app.use(express.json());
@@ -43,6 +46,12 @@ app.use("/api/availability",availabilityRouter);
 app.use('/api/paypal', paypalRouter);
 app.use("/api/portfolio" , portfolioRouter);
 app.use("/api/dashboard",dashBoardRouter );
+app.use("/api/activity", activityRouter);
+
+import subscriptionRoutes from "./routes/subscriptionRouter.js";
+app.use("/api/subscription", subscriptionRoutes);
+
+
 
 connectDB();
 // Start cron job

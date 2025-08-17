@@ -33,6 +33,9 @@ import InvoiceTable from './freelancerDashboard/AllInvoice'
 import ProposalTable from './freelancerDashboard/AllProposal'
 import FreelanceDashboard from './freelancerDashboard/FreelancerDashboard'
 import GrowezaLanding from './publicPages/HomePage'
+import SubscriptionDashboard from './freelancerDashboard/SubscriptionManagement'
+import SubscriptionSuccess from './freelancerDashboard/subscriptionSuccess'
+import SubscriptionFailure from './freelancerDashboard/SubscriptionFailure'
 
 
 function App() {
@@ -73,6 +76,10 @@ function App() {
     <Route path="my-invoice" element={<InvoiceTable />} />
     <Route path="all-proposal" element={<ProposalTable />} />
     <Route path="my-billings" element={<BillingManagement />} />
+    <Route path="my-subscriptions" element={<SubscriptionDashboard />} />
+    <Route path="subscription/success" element={<SubscriptionSuccess />} />
+    <Route path="subscription/cancel" element={<SubscriptionFailure/>} />
+          
          
 
 

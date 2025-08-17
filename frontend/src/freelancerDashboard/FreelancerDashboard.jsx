@@ -277,13 +277,17 @@ const FreelancerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen  w-7xl bg-gradient-to-br from-purple-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-purple-200 rounded-full animate-pulse"></div>
-            <div className="absolute inset-0 w-20 h-20 border-4 border-purple-600 rounded-full animate-spin border-t-transparent"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 w-full">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+              ))}
+            </div>
+            <div className="h-64 bg-gray-200 rounded-xl"></div>
           </div>
-          <p className="mt-4 text-gray-600 font-medium">Loading your dashboard...</p>
         </div>
       </div>
     );

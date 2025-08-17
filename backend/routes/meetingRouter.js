@@ -10,10 +10,11 @@ import {
     requestMeetingPublic,
     rescheduleMeeting,
 } from '../controller/meetingController.js';
+import { enforceLimits } from '../middleWare/enforceLimit.js';
 
 const router = express.Router();
 
-router.post('/', authenticate, createMeeting);
+router.post('/', authenticate, enforceLimits("meetings"), createMeeting);
 router.get('/', authenticate, getMeetings);
 router.put('/reschedule/:meetingId', authenticate, rescheduleMeeting);
 router.put('/cancel/:meetingId', authenticate, cancelMeeting);

@@ -231,6 +231,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import SkillsDropdown from './components/SkillComponent';
 
 const skillsOptions = ['React', 'Node.js', 'MongoDB', 'Tailwind', 'UI/UX', 'Python'];
 const workTypes = ['Web Development', 'UI/UX Design', 'App Development', 'DevOps'];
@@ -440,7 +441,7 @@ export default function OnboardingForm() {
                                 </div>
 
                                 {/* Skills */}
-                                <div className="space-y-3">
+                                {/* <div className="space-y-3">
                                     <label className="block font-medium text-gray-700">Skills *</label>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                         {skillsOptions.map((skill) => (
@@ -471,7 +472,9 @@ export default function OnboardingForm() {
                                             </label>
                                         ))}
                                     </div>
-                                </div>
+                                </div> */}
+                                <div className='space-y-3 relative'><SkillsDropdown formData={formData} setFormData={setFormData} /></div>
+                                
                             </div>
                         )}
 

@@ -827,6 +827,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { Check, Crown, X, Zap } from 'lucide-react';
+import { isLimitReached } from '../helpers/CheckLimit';
 
 const BASE_URL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
 
@@ -837,6 +839,9 @@ const Clients = () => {
     const [showClientModal, setShowClientModal] = useState(false);
     const [showWorkModal, setShowWorkModal] = useState(null);
     const [selectedClientId, setSelectedClientId] = useState(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [user, setUser] = useState(null);
+
 
     const [newClient, setNewClient] = useState({ name: '', email: '', phone: '', company: '', notes: '' });
     const [workDetails, setWorkDetails] = useState({
@@ -850,9 +855,40 @@ const Clients = () => {
     });
 
     const [workFile, setWorkFile] = useState(null);
+    const [subscription, setSubscription] = useState(null);
     const token = localStorage.getItem('authToken');
     const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
+
+// need to see if it works tomorrow 
+    useEffect(() => {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            return;
+        }
+
+        axios
+            .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/freelancer/me`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            .then((res) => setUser(res.data))
+            .catch(() => setUser(null))
+    }, []);
+    const isClientLimitReached = isLimitReached(user, "clients");
+
+    // useEffect(() => {
+    //     axios
+    //         .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/subscription/me`)
+    //         .then((res) => setSubscription(res.data))
+    //         .catch((err) => console.error("Error fetching subscription:", err));
+    // }, []);
+
+    // const isClientLimitReached =
+    //     subscription?.limits?.clients?.used >= subscription?.limits?.clients?.max;
+
+
+
+    
     const fetchClients = async () => {
         try {
             const { data } = await axios.get(`${BASE_URL}/api/clients`, authHeaders);
@@ -980,14 +1016,31 @@ const Clients = () => {
                         ))}
                     </select>
                     <button
-                        onClick={() => setShowClientModal(true)}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl cursor-pointer"
+                        onClick={() =>
+                            isClientLimitReached ? setShowUpgradeModal(true) : setShowClientModal(true)
+                        }
+                        disabled={false} // still clickable, just changes behavior
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-200 transform active:scale-95 shadow-lg ${isClientLimitReached
+                                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                                : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 hover:shadow-xl"
+                            }`}
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                            />
                         </svg>
-                        Add Client
+                        {isClientLimitReached ? "Upgrade to Unlock" : "Add Client"}
                     </button>
+
                 </div>
             </div>
 
@@ -1264,6 +1317,89 @@ const Clients = () => {
                     </div>
                 </div>
             )}
+
+            {/* upgrade modal */}
+            {showUpgradeModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden">
+                        {/* Header with Gradient */}
+                        <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white relative">
+                            <button
+                                onClick={() => setShowUpgradeModal(false)}
+                                className="absolute top-4 right-4 p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all duration-200"
+                            >
+                                <X size={20} />
+                            </button>
+
+                            <div className="text-center">
+                                <div className="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full mb-4">
+                                    <Crown size={32} className="text-yellow-300" />
+                                </div>
+                                <h2 className="text-2xl font-bold mb-2">Upgrade Required</h2>
+                                <p className="text-purple-100 opacity-90">
+                                    Unlock unlimited potential with Professional
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6">
+                            <div className="text-center mb-6">
+                                <p className="text-gray-600 text-sm mb-4">
+                                    You've reached the limit for adding clients in the <span className="font-semibold text-gray-800">Basic Plan</span>.
+                                </p>
+
+                                {/* Features List */}
+                                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-4 mb-6">
+                                    <h3 className="font-semibold text-gray-800 mb-3 flex items-center justify-center gap-2">
+                                        <Zap size={16} className="text-purple-600" />
+                                        Professional Features
+                                    </h3>
+                                    <div className="space-y-2 text-sm">
+                                        {[
+                                            'Unlimited clients & meetings',
+                                            'Advanced scheduling tools',
+                                            'Custom branding options',
+                                            'Priority support'
+                                        ].map((feature, index) => (
+                                            <div key={index} className="flex items-center gap-2 text-gray-700">
+                                                <div className="w-4 h-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+                                                    <Check size={10} className="text-white" />
+                                                </div>
+                                                {feature}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowUpgradeModal(false)}
+                                    className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium cursor-pointer"
+                                >
+                                    Maybe Later
+                                </button>
+                                <button
+                                    onClick={() => alert("Redirect to PayPal/Upgrade Flow")}
+                                    className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
+                                >
+                                    Upgrade Now
+                                </button>
+                            </div>
+
+                            {/* Trust Badge */}
+                            <div className="text-center mt-4">
+                                <p className="text-xs text-gray-500">
+                                    🔒 Secure payment • Cancel anytime
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             <style jsx>{`
                 @keyframes fade-in {

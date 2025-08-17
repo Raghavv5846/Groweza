@@ -213,7 +213,7 @@
 
 
 import React, { useEffect, useState } from 'react';
-import { Calendar, Clock, Users, Video, Mail, Plus, Edit3, Trash2, CheckCircle, XCircle, ReceiptRussianRubleIcon } from 'lucide-react';
+import { Calendar, Clock, Users, Video, Mail, Plus, Edit3, Trash2, CheckCircle, XCircle, ReceiptRussianRubleIcon, Check, Zap, Crown, X } from 'lucide-react';
 import axios from "axios";
 import {toast} from "react-toastify";
 import PendingMeetingRequestsModal from './components/PendingMeetingRequestModal';
@@ -228,6 +228,8 @@ const MeetingManagement = () => {
   const[cancelMeeting  , setCancelMeeting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [subscription, setSubscription] = useState(null);
 
   const [form, setForm] = useState({
     clientName: '',
@@ -256,14 +258,43 @@ const MeetingManagement = () => {
     }
   };
 
+
+
+  // Fetch Subscription =>
+  // need to see if it works tomorrow 
+  // useEffect(() => {
+  //     const token = localStorage.getItem("authToken");
+  //     if (!token) {
+  //         return;
+  //     }
+
+  //     axios
+  //         .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/freelancer/me`, {
+  //             headers: { Authorization: `Bearer ${token}` },
+  //         })
+  //         .then((res) => setUser(res.data))
+  //         .catch(() => setUser(null))
+  // }, []);
+  // const isClientLimitReached =
+  //     user.subscription.limits.clients.used >= user.subscription.limits.clients.max;
+
+  useEffect(() => {
+    axios
+      .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/subscription/me`)
+      .then((res) => setSubscription(res.data))
+      .catch((err) => console.error("Error fetching subscription:", err));
+  }, []);
+
+  const isMeetingLimitReached =
+    subscription?.limits?.meetings?.used >= subscription?.limits?.meetings?.max;
+
+
   // Fetch meetings
   const fetchMeetings = async () => {
     setLoading(true);
     try {
 
       const { data } = await axios.get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/meetings`, config);
-
-
       setMeetings(data);
       toast.success("Fetch meeting info ")
     } catch {
@@ -342,7 +373,7 @@ const MeetingManagement = () => {
     setLoading(true);
     try {
       await axios.put(
-        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/meetings/cancel/${meetingToCancel._id}`,
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/meetings/cancel/${meetingToCancel._id}`,{},
         config // ← You passed config as the body, but that should be the headers if used
       );
       toast.success('Meeting cancelled');
@@ -425,17 +456,44 @@ const MeetingManagement = () => {
               </div>
               </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
+              {/* <button
                 onClick={() => setShowMeetingModal(true)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer"
               >
                 <Plus className="w-5 h-5" />
                 New Meeting
+              </button> */}
+
+              <button
+                onClick={() =>
+                  isMeetingLimitReached ? setShowUpgradeModal(true) : setShowMeetingModal(true)
+                }
+                disabled={false} // still clickable, just changes behavior
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-200 transform active:scale-95 shadow-lg ${isMeetingLimitReached
+                  ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  : "flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer"
+                  }`}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                {isMeetingLimitReached ? "Upgrade to Unlock" : "Add Meeting"}
               </button>
-              <button onClick={() => setRequestModalOpen(true)} className="bg-blue-500 text-white px-4 py-2 rounded
+
+              {/* <button onClick={() => setRequestModalOpen(true)} className="bg-blue-500 text-white px-4 py-2 rounded
               shadow-lg hover:shadow-xl cursor-pointer">
                 View Meeting Requests
-              </button>
+              </button> */}
               <button
                 onClick={() => setShowAvailabilityModal(true)}
                 className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-xl font-medium hover:from-green-600 hover:to-teal-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer"
@@ -475,7 +533,7 @@ const MeetingManagement = () => {
             meetings.map((meeting) => (
               <div key={meeting._id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-200">
                 <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start justify-around mb-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
                         <Users className="w-5 h-5 text-white" />
@@ -488,7 +546,7 @@ const MeetingManagement = () => {
                         </p>
                       </div>
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(meeting.status)}`}>
+                    <div className={`px-3 py-1  rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(meeting.status)}`}>
                       {getStatusIcon(meeting.status)}
                       {meeting.status}
                     </div>
@@ -629,7 +687,6 @@ const MeetingManagement = () => {
                     >
                       <option value="Zoom">Zoom</option>
                       <option value="Google Meet">Google Meet</option>
-                      <option value="Microsoft Teams">Microsoft Teams</option>
                     </select>
                   </div>
 
@@ -844,6 +901,89 @@ const MeetingManagement = () => {
 
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* upgrade modal */}
+        {showUpgradeModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden">
+              {/* Header with Gradient */}
+              <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white relative">
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="absolute top-4 right-4 p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all duration-200"
+                >
+                  <X size={20} />
+                </button>
+
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full mb-4">
+                    <Crown size={32} className="text-yellow-300" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">Upgrade Required</h2>
+                  <p className="text-purple-100 opacity-90">
+                    Unlock unlimited potential with Professional
+                  </p>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <p className="text-gray-600 text-sm mb-4">
+                    You've reached the limit for adding clients in the <span className="font-semibold text-gray-800">Basic Plan</span>.
+                  </p>
+
+                  {/* Features List */}
+                  <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-4 mb-6">
+                    <h3 className="font-semibold text-gray-800 mb-3 flex items-center justify-center gap-2">
+                      <Zap size={16} className="text-purple-600" />
+                      Professional Features
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {[
+                        'Unlimited clients & meetings',
+                        'Advanced scheduling tools',
+                        'Custom branding options',
+                        'Priority support'
+                      ].map((feature, index) => (
+                        <div key={index} className="flex items-center gap-2 text-gray-700">
+                          <div className="w-4 h-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+                            <Check size={10} className="text-white" />
+                          </div>
+                          {feature}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowUpgradeModal(false)}
+                    className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium cursor-pointer"
+                  >
+                    Maybe Later
+                  </button>
+                  <button
+                    onClick={() => alert("Redirect to PayPal/Upgrade Flow")}
+                    className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
+                  >
+                    Upgrade Now
+                  </button>
+                </div>
+
+                {/* Trust Badge */}
+                <div className="text-center mt-4">
+                  <p className="text-xs text-gray-500">
+                    🔒 Secure payment • Cancel anytime
+                  </p>
+                </div>
               </div>
             </div>
           </div>

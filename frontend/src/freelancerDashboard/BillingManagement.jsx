@@ -26,7 +26,7 @@
 //             .finally(() => setLoading(false));
 //     }, [token]);
 
-//     // Render PayPal buttons
+//     Render PayPal buttons
 //     useEffect(() => {
 //         if (!user || !window.paypal) return;
 
@@ -51,6 +51,47 @@
 //             }).render(`#${container}`);
 //         });
 //     }, [user]);
+
+//     useEffect(() => {
+//         if (!user) return;
+
+//         function renderButtons() {
+//             const plans = [
+//                 { id: PAYPAL_BASIC_PLAN_ID, container: 'paypal-basic-button' },
+//                 { id: PAYPAL_PREMIUM_PLAN_ID, container: 'paypal-premium-button' }
+//             ];
+
+//             plans.forEach(({ id, container }) => {
+//                 const el = document.getElementById(container);
+//                 if (el && el.children.length === 0) {
+//                     window.paypal.Buttons({
+//                         style: { layout: 'vertical', color: 'blue', shape: 'pill', label: 'subscribe' },
+//                         createSubscription: (data, actions) =>
+//                             actions.subscription.create({ plan_id: id }),
+//                         onApprove: (data) => {
+//                             alert('Subscription created! ID: ' + data.subscriptionID);
+//                             window.location.reload();
+//                         }
+//                     }).render(`#${container}`);
+//                 }
+//             });
+//         }
+
+//         // If SDK already loaded, render immediately
+//         if (window.paypal) {
+//             renderButtons();
+//         } else {
+//             // Poll until PayPal SDK is available
+//             const interval = setInterval(() => {
+//                 if (window.paypal) {
+//                     clearInterval(interval);
+//                     renderButtons();
+//                 }
+//             }, 300);
+//             return () => clearInterval(interval);
+//         }
+//     }, [user]);
+
 
 //     const cancelSubscription = async () => {
 //         if (!window.confirm('Are you sure you want to cancel auto-renewal?')) return;
@@ -141,6 +182,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const PAYPAL_BASIC_PLAN_ID = import.meta.env.VITE_PAYPAL_BASIC_PLAN_ID;
 const PAYPAL_PREMIUM_PLAN_ID = import.meta.env.VITE_PAYPAL_PREMIUM_PLAN_ID;
@@ -150,75 +192,141 @@ export default function BillingManagement() {
     const [loading, setLoading] = useState(true);
     const [animateCards, setAnimateCards] = useState(false);
 
-    // const token = localStorage.getItem('authToken');
-    // const baseURL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
+    const token = localStorage.getItem('authToken');
+    const baseURL = import.meta.env.VITE_REACT_APP_BACKEND_BASEURL;
 
-    // Mock user data for demo
-    const mockUser = {
-        subscription: {
-            status: 'ACTIVE',
-            plan: 'Premium',
-            nextBillingDate: '2025-09-01T00:00:00.000Z',
-            id: 'sub_123456'
-        }
+    const loadPayPalScript = (clientId) => {
+        return new Promise((resolve, reject) => {
+            if (window.paypal) {
+                resolve(window.paypal);
+                return;
+            }
+
+            // Decide sandbox or live
+            const paypalBaseUrl = clientId.includes("sandbox")
+                ? "https://www.sandbox.paypal.com/sdk/js"
+                : "https://www.paypal.com/sdk/js";
+
+            const script = document.createElement("script");
+            script.src = `${paypalBaseUrl}?client-id=${clientId}&components=buttons&intent=subscription&vault=true&disable-funding=card,credit`;
+            script.async = true;
+            script.onload = () => resolve(window.paypal);
+            script.onerror = () => reject("PayPal SDK could not be loaded.");
+            document.body.appendChild(script);
+        });
     };
+
+
 
     // Fetch user
     useEffect(() => {
-        // if (!token) {
-        //     setLoading(false);
-        //     return;
-        // }
-
-        // axios.get(`${baseURL}/api/freelancer/me`, {
-        //     headers: { Authorization: `Bearer ${token}` },
-        // })
-        //     .then(res => setUser(res.data))
-        //     .catch(() => setUser(null))
-        //     .finally(() => setLoading(false));
-
-        // Mock API call with delay
-        setTimeout(() => {
-            setUser(mockUser);
+        if (!token) {
             setLoading(false);
-            setAnimateCards(true);
-        }, 1000);
+            return;
+        }
+
+        axios.get(`${baseURL}/api/freelancer/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((res) => {
+                setUser(res.data);
+                 setLoading(false);
+                setAnimateCards(true);
+})
+            .catch(() => setUser(null))
+            .finally(() => setLoading(false));
     }, []);
 
     // Render PayPal buttons
+    // useEffect(() => {
+    //     if (!user || !window.paypal) return;
+
+    //     const plans = [
+    //         { id: PAYPAL_BASIC_PLAN_ID, container: 'paypal-basic-button' },
+    //         { id: PAYPAL_PREMIUM_PLAN_ID, container: 'paypal-premium-button' }
+    //     ];
+
+    //     plans.forEach(({ id, container }) => {
+    //         const containerEl = document.getElementById(container);
+    //         if (!containerEl || containerEl.children.length > 0) return;
+
+    //         window.paypal.Buttons({
+    //             style: { layout: 'vertical', color: 'blue', shape: 'pill', label: 'subscribe' },
+    //             createSubscription: (data, actions) => {
+    //                 return actions.subscription.create({ plan_id: id });
+    //             },
+    //             onApprove: (data) => {
+    //                 alert('Subscription created! ID: ' + data.subscriptionID);
+    //                 window.location.reload(); // or fetch updated user info
+    //             }
+    //         }).render(`#${container}`);
+    //     });
+    // }, [user]);
+
+
     useEffect(() => {
-        if (!user || !window.paypal) return;
+        if (!user) return;
 
-        const plans = [
-            { id: PAYPAL_BASIC_PLAN_ID, container: 'paypal-basic-button' },
-            { id: PAYPAL_PREMIUM_PLAN_ID, container: 'paypal-premium-button' }
-        ];
+        const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID; // from .env
+        if (!clientId) {
+            console.error("Missing VITE_PAYPAL_CLIENT_ID in .env");
+            return;
+        }
 
-        plans.forEach(({ id, container }) => {
-            const containerEl = document.getElementById(container);
-            if (!containerEl || containerEl.children.length > 0) return;
+        loadPayPalScript(clientId).then(() => {
+            const plans = [
+                { id: PAYPAL_BASIC_PLAN_ID, container: 'paypal-basic-button' },
+                { id: PAYPAL_PREMIUM_PLAN_ID, container: 'paypal-premium-button' }
+            ];
 
-            window.paypal.Buttons({
-                style: { layout: 'vertical', color: 'blue', shape: 'pill', label: 'subscribe' },
-                createSubscription: (data, actions) => {
-                    return actions.subscription.create({ plan_id: id });
-                },
-                onApprove: (data) => {
-                    alert('Subscription created! ID: ' + data.subscriptionID);
-                    window.location.reload(); // or fetch updated user info
+            plans.forEach(({ id, container }) => {
+                const el = document.getElementById(container);
+                if (el && el.children.length === 0) {
+                    window.paypal.Buttons({
+                        style: { layout: 'vertical', color: 'blue', shape: 'pill', label: 'subscribe' },
+                        createSubscription: (data, actions) =>
+                            actions.subscription.create({ plan_id: id }),
+                        onApprove: async (data, actions) => {
+                            try {
+                                const subscriptionId = data.subscriptionID;
+
+                                // Send subscription to backend
+                                await axios.post(
+                                    `${baseURL}/api/paypal/save-subscription`,
+                                    {
+                                        subscriptionId,
+                                        plan: id === PAYPAL_BASIC_PLAN_ID ? "Basic" : "Premium",
+                                    },
+                                    {
+                                        headers: { Authorization: `Bearer ${token}` },
+                                    }
+                                );
+
+                                toast.success("Subscription created successfully!");
+                                window.location.reload();
+                            } catch (error) {
+                                console.error("Error saving subscription:", error);
+                                toast.error("Subscription saved failed!");
+                            }
+                        }
+
+                    }).render(`#${container}`);
                 }
-            }).render(`#${container}`);
+            });
+        }).catch(err => {
+            console.error(err);
         });
     }, [user]);
-
+    
     const cancelSubscription = async () => {
         if (!window.confirm('Are you sure you want to cancel auto-renewal?')) return;
         try {
-            // await axios.post(`${baseURL}/api/paypal/cancel-auto-renewal/${user.subscription.id}`, {}, {
-            //     headers: { Authorization: `Bearer ${token}` }
-            // });
-            alert('Subscription cancelled.');
-            // window.location.reload();
+            await axios.post(`${baseURL}/api/paypal/cancel-auto-renewal/${user.subscription.id}`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success('Subscription cancelled successfully.');
+            window.location.reload();
+
         } catch (err) {
             alert('Error cancelling: ' + err?.response?.data?.error || err.message);
         }
@@ -237,10 +345,17 @@ export default function BillingManagement() {
 
     if (loading) {
         return (
-            <div className="min-h-screen w-7xl flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-                <div className="text-center">
-                    <div className="inline-block animate-spin  rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
-                    <p className="text-lg text-gray-600">Loading billing information...</p>
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 w-full">
+                <div className="max-w-7xl mx-auto">
+                    <div className="animate-pulse">
+                        <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+                            ))}
+                        </div>
+                        <div className="h-64 bg-gray-200 rounded-xl"></div>
+                    </div>
                 </div>
             </div>
         );
@@ -248,23 +363,23 @@ export default function BillingManagement() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-6 sm:py-10">
-            <div className="w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="text-center mb-8 sm:mb-12 animate-fade-in">
                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
                         Billing Management
                     </h1>
-                    <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                    <p className="text-gray-600 text-lg sm:text-xl max-w-2xl mx-auto">
                         Manage your subscription and explore our flexible pricing plans
                     </p>
                 </div>
 
                 <div className="space-y-8 sm:space-y-12">
                     {/* Subscription Status */}
-                    {user?.subscription?.status === 'ACTIVE' && (
+                    {(user?.subscription?.plan === 'Premium' || user?.subscription?.plan === 'Basic' )&& (
                         <div className={`transform transition-all duration-700 ${animateCards ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
                             <div className="bg-gradient-to-r from-green-400 to-green-500 p-1 rounded-2xl shadow-xl">
-                                <div className="bg-white rounded-xl p-6 sm:p-8">
+                                <div className="bg-white rounded-xl p-4 sm:p-6 lg:p-8">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                         <div className="mb-4 sm:mb-0">
                                             <div className="flex items-center mb-2">
@@ -280,7 +395,7 @@ export default function BillingManagement() {
                                         </div>
                                         <button
                                             onClick={cancelSubscription}
-                                            className=" cursor-pointer bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                                            className="cursor-pointer bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                                         >
                                             Cancel Auto-Renewal
                                         </button>
@@ -295,43 +410,40 @@ export default function BillingManagement() {
                         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-800">
                             Compare Plans
                         </h2>
-                        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full">
-                                    <thead className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                                        <tr>
-                                            <th className="p-4 sm:p-6 text-left font-semibold">Feature</th>
-                                            <th className="p-4 sm:p-6 text-center font-semibold">
-                                                <div className="flex flex-col items-center">
-                                                    <span>Basic</span>
-                                                    <span className="text-sm opacity-90">$11/mo</span>
-                                                </div>
-                                            </th>
-                                            <th className="p-4 sm:p-6 text-center font-semibold">
-                                                <div className="flex flex-col items-center">
-                                                    <span>Premium</span>
-                                                    <span className="text-sm opacity-90">$21/mo</span>
-                                                </div>
-                                            </th>
+                        <div className="bg-white rounded-2xl shadow-xl overflow-x-auto">
+                            <table className="min-w-full table-auto">
+                                <thead className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                                    <tr>
+                                        <th className="p-3 sm:p-4 text-left font-semibold">Feature</th>
+                                        <th className="p-3 sm:p-4 text-center font-semibold">
+                                            <div className="flex flex-col items-center">
+                                                <span>Basic</span>
+                                                <span className="text-sm opacity-90">$11/mo</span>
+                                            </div>
+                                        </th>
+                                        <th className="p-3 sm:p-4 text-center font-semibold">
+                                            <div className="flex flex-col items-center">
+                                                <span>Premium</span>
+                                                <span className="text-sm opacity-90">$21/mo</span>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {planFeatures.map((f, i) => (
+                                        <tr
+                                            key={i}
+                                            className={`border-t border-gray-100 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 ${i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
+                                        >
+                                            <td className="p-3 sm:p-4 font-medium text-gray-800">{f.label}</td>
+                                            <td className="p-3 sm:p-4 text-center text-gray-600">{f.basic}</td>
+                                            <td className="p-3 sm:p-4 text-center">
+                                                <span className="font-semibold text-purple-600">{f.premium}</span>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {planFeatures.map((f, i) => (
-                                            <tr
-                                                key={i}
-                                                className={`border-t border-gray-100 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 ${i % 2 === 0 ? 'bg-gray-50' : 'bg-white'
-                                                    }`}
-                                            >
-                                                <td className="p-4 sm:p-6 font-medium text-gray-800">{f.label}</td>
-                                                <td className="p-4 sm:p-6 text-center text-gray-600">{f.basic}</td>
-                                                <td className="p-4 sm:p-6 text-center">
-                                                    <span className="font-semibold text-purple-600">{f.premium}</span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -340,7 +452,7 @@ export default function BillingManagement() {
                         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-800">
                             Choose Your Plan
                         </h2>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
                             {/* Basic Plan */}
                             <div className="group relative">
                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 rounded-3xl opacity-0 group-hover:opacity-100 transform scale-105 transition-all duration-300"></div>
@@ -370,11 +482,7 @@ export default function BillingManagement() {
                                         </div>
                                     </div>
 
-                                    <div id="paypal-basic-button" className="flex justify-center">
-                                        <button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105">
-                                            Subscribe to Basic
-                                        </button>
-                                    </div>
+                                    <div id="paypal-basic-button" className="flex justify-center"></div>
                                 </div>
                             </div>
 
@@ -383,7 +491,7 @@ export default function BillingManagement() {
                                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl opacity-100 transform scale-105"></div>
                                 <div className="relative bg-white border-2 border-purple-500 rounded-3xl shadow-2xl p-6 sm:p-8 text-center transform transition-all duration-300 hover:scale-105">
                                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                                        <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-semibold">
+                                        <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 sm:px-6 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold">
                                             MOST POPULAR
                                         </span>
                                     </div>
@@ -413,47 +521,11 @@ export default function BillingManagement() {
                                         </div>
                                     </div>
 
-                                    <div id="paypal-premium-button" className="flex justify-center">
-                                        <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg">
-                                            Subscribe to Premium
-                                        </button>
-                                    </div>
+                                    <div id="paypal-premium-button" className="flex justify-center "></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    {/* Additional Features Section */}
-                    {/* <div className={`transform transition-all duration-700 delay-600 ${animateCards ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-                        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
-                            <h3 className="text-2xl font-bold text-center mb-8 text-gray-800">
-                                Why Choose Our Platform?
-                            </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div className="text-center p-4 rounded-xl hover:bg-blue-50 transition-colors duration-300">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                                        <span className="text-2xl">💼</span>
-                                    </div>
-                                    <h4 className="font-semibold text-gray-800 mb-2">Professional Tools</h4>
-                                    <p className="text-gray-600 text-sm">Everything you need to manage your freelance business</p>
-                                </div>
-                                <div className="text-center p-4 rounded-xl hover:bg-purple-50 transition-colors duration-300">
-                                    <div className="w-12 h-12 bg-purple-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                                        <span className="text-2xl">📱</span>
-                                    </div>
-                                    <h4 className="font-semibold text-gray-800 mb-2">Mobile Ready</h4>
-                                    <p className="text-gray-600 text-sm">Access your dashboard anywhere, anytime</p>
-                                </div>
-                                <div className="text-center p-4 rounded-xl hover:bg-pink-50 transition-colors duration-300">
-                                    <div className="w-12 h-12 bg-pink-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                                        <span className="text-2xl">🔒</span>
-                                    </div>
-                                    <h4 className="font-semibold text-gray-800 mb-2">Secure & Safe</h4>
-                                    <p className="text-gray-600 text-sm">Your data is protected with enterprise-grade security</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div> */}
                 </div>
             </div>
         </div>
