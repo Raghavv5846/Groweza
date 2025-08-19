@@ -1230,7 +1230,9 @@ import {
     Cpu,
     Timer,
     Repeat,
-    ShieldCheck
+    ShieldCheck,
+    Linkedin,
+    Instagram
 } from 'lucide-react';
 import {useNavigate} from "react-router-dom"
 
@@ -1358,7 +1360,23 @@ const GrowezaLanding = () => {
     };
 
     const navItems = ['Home', 'Features', 'Pricing', 'Testimonials', 'Contact'];
-
+    const socials = [
+        {
+            name: "LinkedIn",
+            icon: Linkedin,
+            link: "https://www.linkedin.com/in/your-profile", // replace with your link
+        },
+        {
+            name: "X",
+            icon: X,
+            link: "https://x.com/your-handle", // replace with your link
+        },
+        {
+            name: "Instagram",
+            icon: Instagram,
+            link: "https://instagram.com/your-handle", // replace with your link
+        },
+    ];
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800 overflow-hidden relative">
             {/* Particle Canvas Background */}
@@ -1426,6 +1444,47 @@ const GrowezaLanding = () => {
                                 className="text-slate-600 hover:text-violet-600 transition-colors p-2"
                             >
                                 {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                                {/* Mobile Menu Panel */}
+                                {isMenuOpen && (
+                                    <div className="md:hidden absolute top-16 left-0 w-full bg-white/90 backdrop-blur-xl shadow-lg border-t border-slate-200 z-50 animate-slideDown">
+                                        <div className="flex flex-col px-6 py-4 space-y-4">
+                                            {navItems.map((item) => (
+                                                <button
+                                                    key={item}
+                                                    onClick={() => {
+                                                        scrollToSection(item.toLowerCase());
+                                                        setIsMenuOpen(false); // close after click
+                                                    }}
+                                                    className="text-lg text-slate-700 hover:text-violet-600 font-medium transition-colors duration-300 text-left"
+                                                >
+                                                    {item}
+                                                </button>
+                                            ))}
+
+                                            <div className="pt-4 border-t border-slate-200 flex flex-col space-y-3">
+                                                <button
+                                                    className="text-slate-600 hover:text-violet-600 transition-colors font-medium text-left"
+                                                    onClick={() => {
+                                                        navigate("/login");
+                                                        setIsMenuOpen(false);
+                                                    }}
+                                                >
+                                                    Login
+                                                </button>
+                                                <button
+                                                    className="bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:scale-105 transition-transform duration-300 text-center"
+                                                    onClick={() => {
+                                                        navigate("/signup");
+                                                        setIsMenuOpen(false);
+                                                    }}
+                                                >
+                                                    Sign Up
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                             </button>
                         </div>
                     </div>
@@ -1483,7 +1542,7 @@ const GrowezaLanding = () => {
 
                             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-8">
                                 <button className="group relative bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 text-white px-12 py-5 rounded-full font-bold text-lg overflow-hidden transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:shadow-violet-500/25 cursor-pointer"
-                                    onClick={() => navigate('/dashboard')}
+                                    onClick={() => navigate('/login')}
                                 >
                                     <span className="relative z-10 flex items-center">
                                         Get Started
@@ -1688,7 +1747,7 @@ const GrowezaLanding = () => {
             </section>
 
             {/* Solution Overview */}
-            <section
+            {/* <section
                 id="features"
                 className="py-32 relative bg-white"
                 data-animate
@@ -1800,7 +1859,159 @@ const GrowezaLanding = () => {
                         ))}
                     </div>
                 </div>
+            </section> */}
+
+            <section
+                id="features"
+                className="py-32 relative bg-white"
+                data-animate
+            >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="text-center mb-20">
+                        <div className="inline-flex items-center px-6 py-3 rounded-full bg-green-50 border border-green-200 mb-8">
+                            <Sparkles className="mr-2 text-green-600" size={16} />
+                            <span className="text-sm font-medium text-green-600">The Solution</span>
+                        </div>
+                        <h2 className="text-4xl sm:text-6xl font-black text-slate-800 mb-6">
+                            One Dashboard.{" "}
+                            <span className="text-transparent bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text">
+                                Zero Headaches.
+                            </span>
+                        </h2>
+                        <p className="text-lg sm:text-xl text-slate-600 max-w-3xl sm:max-w-4xl mx-auto">
+                            From first contact to final payment, Groweza's AI handles everything —
+                            so you can focus on what actually makes money.
+                        </p>
+                    </div>
+
+                    <div className="space-y-20">
+                        {[
+                            {
+                                icon: Brain,
+                                title: "AI Client Management",
+                                description:
+                                    "Our AI learns your clients' patterns, predicts their needs, and automates relationship management. Never lose a deal to poor follow-up again.",
+                                features: [
+                                    "Smart contact scoring",
+                                    "Automated relationship tracking",
+                                    "Predictive insights",
+                                ],
+                                color: "from-purple-500 to-violet-500",
+                                bgColor: "bg-purple-50",
+                                textColor: "text-purple-600",
+                                side: "left",
+                            },
+                            {
+                                icon: Zap,
+                                title: "Lightning Invoicing",
+                                description:
+                                    "Create branded invoices in 3 seconds, not 30 minutes. AI suggests optimal pricing based on market rates and client history.",
+                                features: [
+                                    "Instant invoice generation",
+                                    "Smart pricing recommendations",
+                                    "One-click payments",
+                                ],
+                                color: "from-blue-500 to-cyan-500",
+                                bgColor: "bg-blue-50",
+                                textColor: "text-blue-600",
+                                side: "right",
+                            },
+                            {
+                                icon: FileText,
+                                title: "AI Proposal Engine",
+                                description:
+                                    "Generate winning proposals that close deals. Our AI analyzes 100,000+ successful proposals to craft yours.",
+                                features: ["AI-powered writing", "Win rate optimization", "Template learning"],
+                                color: "from-green-500 to-emerald-500",
+                                bgColor: "bg-green-50",
+                                textColor: "text-green-600",
+                                side: "left",
+                            },
+                            {
+                                icon: Calendar,
+                                title: "Smart Scheduling",
+                                description:
+                                    "AI finds the perfect meeting times, handles reschedules, and even prep briefs. Your calendar becomes your assistant.",
+                                features: [
+                                    "Intelligent availability",
+                                    "Auto conflict resolution",
+                                    "Meeting preparation",
+                                ],
+                                color: "from-indigo-500 to-purple-500",
+                                bgColor: "bg-indigo-50",
+                                textColor: "text-indigo-600",
+                                side: "right",
+                            },
+                        ].map((feature, index) => (
+                            <div
+                                key={index}
+                                className={`flex flex-col md:flex-row ${feature.side === "right" ? "md:flex-row-reverse" : ""
+                                    } items-center gap-10`}
+                                style={{
+                                    transform: isVisible["features"]
+                                        ? "translateX(0)"
+                                        : `translateX(${feature.side === "right" ? "100px" : "-100px"})`,
+                                    opacity: isVisible["features"] ? 1 : 0,
+                                    transitionDelay: `${index * 0.3}s`,
+                                    transition: "all 0.8s ease-out",
+                                }}
+                            >
+                                {/* Text Section */}
+                                <div className={`flex-1 ${feature.side === "right" ? "md:pl-12" : "md:pr-12"}`}>
+                                    <div className="space-y-6 text-center md:text-left">
+                                        <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
+                                            <div
+                                                className={`w-16 h-16 ${feature.bgColor} rounded-2xl flex items-center justify-center shadow-sm`}
+                                            >
+                                                <feature.icon className={feature.textColor} size={32} />
+                                            </div>
+                                            <h3 className="text-2xl sm:text-3xl font-bold text-slate-800">
+                                                {feature.title}
+                                            </h3>
+                                        </div>
+
+                                        <p className="text-lg sm:text-xl text-slate-600 leading-relaxed">
+                                            {feature.description}
+                                        </p>
+
+                                        <div className="space-y-3">
+                                            {feature.features.map((feat, i) => (
+                                                <div key={i} className="flex items-center space-x-3">
+                                                    <div
+                                                        className={`w-6 h-6 bg-gradient-to-r ${feature.color} rounded-full flex items-center justify-center`}
+                                                    >
+                                                        <Check className="text-white" size={14} />
+                                                    </div>
+                                                    <span className="text-slate-600">{feat}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Illustration Section */}
+                                <div className="flex-1 w-full md:w-auto">
+                                    <div className="relative group" style={{ transform: getTransform(0.2) }}>
+                                        <div
+                                            className={`absolute inset-0 bg-gradient-to-r ${feature.color} opacity-10 rounded-3xl blur-3xl group-hover:opacity-20 transition-opacity duration-700`}
+                                        />
+                                        <div
+                                            className={`relative ${feature.bgColor} backdrop-blur-xl rounded-3xl p-8 border ${feature.bgColor
+                                                .replace("bg-", "border-")
+                                                .replace("-50", "-200")} group-hover:border-violet-300 transition-all duration-500 shadow-sm group-hover:shadow-lg`}
+                                        >
+                                            <div className="aspect-video rounded-2xl overflow-hidden bg-white/50 flex items-center justify-center">
+                                                <feature.icon className={`${feature.textColor} opacity-20`} size={80} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </section>
+
 
             {/* Pricing Section */}
             <section
@@ -1988,7 +2199,7 @@ const GrowezaLanding = () => {
                                 color: "from-purple-500 to-violet-500",
                                 bgColor: "bg-purple-50",
                                 textColor: "text-purple-600",
-                                metrics: { revenue: "+340%", clients: "15 active", time: "30hrs saved/week" }
+                                metrics: { revenue: "+340%", clients: "15 active" }
                             },
                             {
                                 quote: "The AI proposal feature is pure magic. It writes better proposals than I ever could, and my close rate went from 20% to 80%. I'm not exaggerating.",
@@ -1998,7 +2209,7 @@ const GrowezaLanding = () => {
                                 color: "from-blue-500 to-cyan-500",
                                 bgColor: "bg-blue-50",
                                 textColor: "text-blue-600",
-                                metrics: { closeRate: "80%", proposals: "50+ monthly", income: "+$8K/month" }
+                                metrics: { closeRate: "80%", proposals: "50+ monthly" }
                             },
                             {
                                 quote: "My clients think I have a full team now. The automated follow-ups and smart scheduling make me look like a Fortune 500 company. Best investment ever.",
@@ -2008,7 +2219,7 @@ const GrowezaLanding = () => {
                                 color: "from-green-500 to-emerald-500",
                                 bgColor: "bg-green-50",
                                 textColor: "text-green-600",
-                                metrics: { clients: "23 active", referrals: "+60%", satisfaction: "98%" }
+                                metrics: { clients: "23 active", referrals: "+60%" }
                             }
                         ].map((testimonial, index) => (
                             <div
@@ -2109,7 +2320,8 @@ const GrowezaLanding = () => {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-8">
-                            <button className="group relative bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 text-white px-12 py-6 rounded-full font-bold text-xl overflow-hidden transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:shadow-violet-500/25 cursor-pointer">
+                            <button className="group relative bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 text-white px-12 py-6 rounded-full font-bold text-xl overflow-hidden transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:shadow-violet-500/25 cursor-pointer"
+                            onClick={()=>navigate("/login")}>
                                 <span className="relative z-10 flex items-center">
                                     Start Your Transformation
                                     <ArrowRight className="ml-4 group-hover:translate-x-2 transition-transform duration-300" size={24} />
@@ -2158,13 +2370,16 @@ const GrowezaLanding = () => {
                                 The AI-powered platform that transforms freelancers into business powerhouses. Join the revolution.
                             </p>
                             <div className="flex space-x-4">
-                                {['LinkedIn', 'Twitter', 'Instagram'].map((social) => (
+                                {socials.map((social) => (
                                     <a
-                                        key={social}
-                                        href="#"
+                                        key={social.name}
+                                        href={social.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center text-violet-600 hover:text-violet-700 hover:bg-violet-200 transition-all duration-300"
+                                        aria-label={social.name}
                                     >
-                                        {social[0]}
+                                        <social.icon size={22} />
                                     </a>
                                 ))}
                             </div>
