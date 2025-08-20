@@ -321,7 +321,7 @@ export default function BillingManagement() {
     const cancelSubscription = async () => {
         if (!window.confirm('Are you sure you want to cancel auto-renewal?')) return;
         try {
-            await axios.post(`${baseURL}/api/paypal/cancel-auto-renewal/${user.subscription.id}`, {}, {
+            await axios.post(`${baseURL}/api/paypal/cancel-auto-renewal/${activeSub.id}`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success('Subscription cancelled successfully.');
@@ -331,6 +331,8 @@ export default function BillingManagement() {
             alert('Error cancelling: ' + err?.response?.data?.error || err.message);
         }
     };
+
+
 
     const planFeatures = [
         { label: 'Clients', basic: '15', premium: 'Unlimited' },
@@ -342,6 +344,8 @@ export default function BillingManagement() {
         { label: 'Profile URL', basic: 'Platform Domain', premium: 'Custom Domain' },
         { label: 'Email/SMS Reminders', basic: 'Manual Only', premium: 'Auto Email + SMS' },
     ];
+
+    const activeSub = user?.subscriptions?.find(sub => sub.active);
 
     if (loading) {
         return (
@@ -375,8 +379,9 @@ export default function BillingManagement() {
                 </div>
 
                 <div className="space-y-8 sm:space-y-12">
+                    
                     {/* Subscription Status */}
-                    {(user?.subscription?.plan === 'Premium' || user?.subscription?.plan === 'Basic' )&& (
+                    {(activeSub?.plan === 'Premium' || activeSub?.plan === 'Basic') && (
                         <div className={`transform transition-all duration-700 ${animateCards ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
                             <div className="bg-gradient-to-r from-green-400 to-green-500 p-1 rounded-2xl shadow-xl">
                                 <div className="bg-white rounded-xl p-4 sm:p-6 lg:p-8">
@@ -387,10 +392,10 @@ export default function BillingManagement() {
                                                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Active Subscription</h2>
                                             </div>
                                             <p className="text-gray-600 mb-1">
-                                                Plan: <span className="font-semibold text-purple-600">{user.subscription.plan}</span>
+                                                Plan: <span className="font-semibold text-purple-600">{activeSub.plan}</span>
                                             </p>
                                             <p className="text-gray-600 text-sm">
-                                                Next Billing: <span className="font-medium">{new Date(user.subscription.nextBillingDate).toLocaleDateString()}</span>
+                                                Next Billing: <span className="font-medium">{new Date(activeSub.expiresAt).toLocaleDateString()}</span>
                                             </p>
                                         </div>
                                         <button

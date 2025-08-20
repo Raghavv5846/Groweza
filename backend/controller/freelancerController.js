@@ -131,6 +131,86 @@ import { v2 as cloudinaryy } from "cloudinary";
 
 
 import { logActivity } from '../config/logActivity.js'; // import logger
+// export const completeOnboarding = async (req, res) => {
+//     try {
+//         const userId = req.user._id;
+
+//         // Safe parse helper
+//         const safeParse = (value, fallback) => {
+//             if (!value) return fallback;
+//             if (typeof value === 'string') {
+//                 try {
+//                     return JSON.parse(value);
+//                 } catch {
+//                     return fallback;
+//                 }
+//             }
+//             return value; // already object/array
+//         };
+
+//         const skills = safeParse(req.body.skills, []);
+//         const typeOfWork = safeParse(req.body.typeOfWork, []);
+//         const location = safeParse(req.body.location, {
+//             city: req.body['location[city]'] || '',
+//             country: req.body['location[country]'] || ''
+//         });
+
+//         let profileUrl = '';
+
+//         // If image is uploaded (memoryStorage)
+//         if (req.file && req.file.buffer) {
+//             const result = await new Promise((resolve, reject) => {
+//                 cloudinaryy.uploader.upload_stream(
+//                     { folder: 'freelancer_profiles', width: 300, crop: 'scale' },
+//                     (error, uploaded) => {
+//                         if (error) return reject(error);
+//                         resolve(uploaded);
+//                     }
+//                 ).end(req.file.buffer);
+//             });
+
+//             profileUrl = result.secure_url;
+//         }
+
+//         const updatedUser = await User.findByIdAndUpdate(
+//             userId,
+//             {
+//                 profile: profileUrl || undefined,
+//                 bio: req.body.bio,
+//                 skills,
+//                 typeOfWork,
+//                 workExperience: req.body.workExperience,
+//                 location,
+//                 heardUsFrom: req.body.heardUsFrom,
+//                 phone: req.body.phone,
+//                 website: req.body.website,
+//                 hasCompleted: true,
+//             },
+//             { new: true }
+//         );
+
+//         if (!updatedUser) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
+
+//         await logActivity(
+//             req.user._id,
+//             "ONBOARDING_COMPLETED",
+//             `Freelancer ${updatedUser.name} completed onboarding`,
+//             { freelancerId: updatedUser._id }
+//         );
+
+
+//         res.status(200).json({
+//             message: 'Onboarding completed successfully',
+//             user: updatedUser,
+//         });
+//     } catch (error) {
+//         console.error('Onboarding Error:', error);
+//         res.status(500).json({ message: 'Server Error', error: error.message });
+//     }
+// };
+
 export const completeOnboarding = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -157,7 +237,7 @@ export const completeOnboarding = async (req, res) => {
 
         let profileUrl = '';
 
-        // If image is uploaded (memoryStorage)
+        // ✅ Upload profile image if provided
         if (req.file && req.file.buffer) {
             const result = await new Promise((resolve, reject) => {
                 cloudinaryy.uploader.upload_stream(
@@ -172,6 +252,7 @@ export const completeOnboarding = async (req, res) => {
             profileUrl = result.secure_url;
         }
 
+        // ✅ Update profile + onboarding info
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             {
@@ -193,13 +274,30 @@ export const completeOnboarding = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        // ✅ Assign Free subscription if none exists
+        if (!updatedUser.subscriptions || updatedUser.subscriptions.length === 0) {
+            updatedUser.subscriptions.push({
+                plan: "Free",
+                active: true,
+                startedAt: new Date(),
+                expiresAt: null,
+                limits: {
+                    clients: { used: 0, max: 3 },
+                    invoices: { used: 0, max: 2 },
+                    proposals: { used: 0, max: 2 },
+                    meetings: { used: 0, max: 1 },
+                },
+            });
+
+            await updatedUser.save();
+        }
+
         await logActivity(
             req.user._id,
             "ONBOARDING_COMPLETED",
             `Freelancer ${updatedUser.name} completed onboarding`,
             { freelancerId: updatedUser._id }
         );
-
 
         res.status(200).json({
             message: 'Onboarding completed successfully',

@@ -18,7 +18,7 @@ export const createInvoice = async (req, res) => {
         const work = client.works.id(workId);
         if (!work) return res.status(404).json({ message: 'Work not found under this client' });
 
-        const newInvoice = await invoiceModel.create({
+        const newInvoice = await Invoice.create({
             freelancerId: req.user.userId,
             clientId,
             workId,

@@ -140,12 +140,14 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell
 } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 const FreelancerDashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [revenueData, setRevenueData] = useState([]);
   const [activeCard, setActiveCard] = useState(null);
+  const navigate = useNavigate();
 
   // Mock data for demonstration
   const mockStats = {
@@ -506,8 +508,10 @@ const FreelancerDashboard = () => {
             <h3 className="text-xl font-bold text-gray-900 mb-4">⚡ Quick Actions</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Button
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg"
-              >
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
+                onClick={()=>
+                  navigate("/dashboard/invoices")
+                }>
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -516,8 +520,10 @@ const FreelancerDashboard = () => {
 
               <Button
                 variant="outline"
-                className="border-2 border-purple-200 text-purple-600 hover:bg-purple-50 font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5"
-              >
+                className="border-2 border-purple-200 text-purple-600 hover:bg-purple-50 font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
+                onClick={() =>
+                  navigate("/dashboard/proposals")
+                }>
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
@@ -526,7 +532,10 @@ const FreelancerDashboard = () => {
 
               <Button
                 variant="secondary"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
+                onClick={() =>
+                  navigate("/dashboard/meetings")
+                }
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3a4 4 0 118 0v4m-8 0h8a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z" />

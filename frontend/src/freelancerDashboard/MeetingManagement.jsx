@@ -217,6 +217,7 @@ import { Calendar, Clock, Users, Video, Mail, Plus, Edit3, Trash2, CheckCircle, 
 import axios from "axios";
 import {toast} from "react-toastify";
 import PendingMeetingRequestsModal from './components/PendingMeetingRequestModal';
+import { isLimitReached } from '../helpers/CheckLimit';
 const MeetingManagement = () => {
   const token = localStorage.getItem('authToken');
   const [meetings, setMeetings] = useState([]);
@@ -230,6 +231,7 @@ const MeetingManagement = () => {
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [subscription, setSubscription] = useState(null);
+  const [user, setUser] = useState(null);
 
   const [form, setForm] = useState({
     clientName: '',
@@ -262,31 +264,32 @@ const MeetingManagement = () => {
 
   // Fetch Subscription =>
   // need to see if it works tomorrow 
-  // useEffect(() => {
-  //     const token = localStorage.getItem("authToken");
-  //     if (!token) {
-  //         return;
-  //     }
-
-  //     axios
-  //         .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/freelancer/me`, {
-  //             headers: { Authorization: `Bearer ${token}` },
-  //         })
-  //         .then((res) => setUser(res.data))
-  //         .catch(() => setUser(null))
-  // }, []);
-  // const isClientLimitReached =
-  //     user.subscription.limits.clients.used >= user.subscription.limits.clients.max;
-
   useEffect(() => {
-    axios
-      .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/subscription/me`)
-      .then((res) => setSubscription(res.data))
-      .catch((err) => console.error("Error fetching subscription:", err));
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+          return;
+      }
+
+      axios
+          .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/freelancer/me`, {
+              headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((res) => setUser(res.data))
+          .catch(() => setUser(null))
   }, []);
 
-  const isMeetingLimitReached =
-    subscription?.limits?.meetings?.used >= subscription?.limits?.meetings?.max;
+  const isMeetingLimitReached = isLimitReached(user, "meetings");
+
+
+  // useEffect(() => {
+  //   axios
+  //     .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/subscription/me`)
+  //     .then((res) => setSubscription(res.data))
+  //     .catch((err) => console.error("Error fetching subscription:", err));
+  // }, []);
+
+  // const isMeetingLimitReached =
+  //   subscription?.limits?.meetings?.used >= subscription?.limits?.meetings?.max;
 
 
   // Fetch meetings

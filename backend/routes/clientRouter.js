@@ -11,7 +11,7 @@ router.use(authenticate); // protect all routes
 
 // Client routes
 router.get('/', getAllClients);
-router.post('/', addClient);
+router.post('/', enforceLimits("clients"), addClient);
 router.put('/:clientId', updateClient);
 router.delete('/:clientId', deleteClient);
 

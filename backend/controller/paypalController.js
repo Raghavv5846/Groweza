@@ -378,6 +378,32 @@ export const cancelAutoRenewal = async (req, res) => {
 
         if (subscription) {
             subscription.active = false;
+            
+            
+
+        let freePlan = user.subscriptions.find((sub) => sub.plan === "Free");
+
+            if (!freePlan) {
+                // If user somehow doesn’t have a free plan record, create one
+                freePlan = {
+                    plan: "Free",
+                    active: true,
+                    startedAt: new Date(),
+                    expiresAt: null,
+                    limits: {
+                        clients: { limit: 3 },
+                        invoices: { limit: 2 },
+                        proposals: { limit: 2 },
+                        meetings: { limit: 1 },
+                    },
+                };
+                user.subscriptions.push(freePlan);
+            } else {
+                freePlan.active = true;
+                freePlan.startedAt = new Date();
+                freePlan.expiresAt = null;
+            }
+
             await user.save();
         }
 

@@ -964,18 +964,20 @@ const InvoiceManagement = () => {
 
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {/* Main Upgrade / Invoice Actions Button */}
                     <button
                       onClick={() =>
                         isPremiumTemplateSelected
-                          ? setShowUpgradeModal(true) // Show upgrade modal
+                          ? setShowUpgradeModal(true)
                           : isInvoicesLimitReached
                             ? setShowUpgradeModal(true)
                             : null
                       }
                       disabled={isPremiumTemplateSelected || isInvoicesLimitReached}
-                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-200 transform active:scale-95 shadow-lg ${isPremiumTemplateSelected || isInvoicesLimitReached
+                      className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 transform active:scale-95 shadow-lg w-full
+      ${isPremiumTemplateSelected || isInvoicesLimitReached
                           ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                          : "bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer"
+                          : "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 hover:scale-105 hover:shadow-xl cursor-pointer"
                         }`}
                     >
                       {isPremiumTemplateSelected
@@ -985,15 +987,15 @@ const InvoiceManagement = () => {
                           : "Invoice Actions"}
                     </button>
 
-                    {/* Show Email/Download/Save ONLY if template is valid */}
+                    {/* Secondary actions (responsive) */}
                     {!isPremiumTemplateSelected && !isInvoicesLimitReached && (
-                      <div className="flex gap-3 mt-3">
+                      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full sm:col-span-1 lg:col-span-3">
                         {/* Email */}
                         <button
                           onClick={() =>
                             sendInvoiceToClient({ clientName: client.name, clientEmail: client.email })
                           }
-                          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                          className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2"
                         >
                           📧 Email
                         </button>
@@ -1001,7 +1003,7 @@ const InvoiceManagement = () => {
                         {/* Download */}
                         <button
                           onClick={handleDownloadPDF}
-                          className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                          className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2"
                         >
                           ⬇️ Download
                         </button>
@@ -1010,7 +1012,7 @@ const InvoiceManagement = () => {
                         <button
                           onClick={handleSaveInvoice}
                           disabled={isLoading}
-                          className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                          className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                           {isLoading ? (
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1021,6 +1023,7 @@ const InvoiceManagement = () => {
                       </div>
                     )}
                   </div>
+
 
                 </div>
               )}
