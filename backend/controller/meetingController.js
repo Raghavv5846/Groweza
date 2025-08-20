@@ -366,22 +366,28 @@ const generateGoogleMeetLink = async () => {
 };
 
 // Unified function
-export const generateLink = async (platform) => {
-    try {
-        if (platform === 'Zoom') {
+// export const generateLink = async (platform) => {
+//     try {
+//         if (platform === 'Zoom') {
 
-            return await generateZoomLink();
-        } else if (platform === 'Google Meet') {
-            return await generateGoogleMeetLink();
-        } else {
-            throw new Error('Unsupported platform');
-        }
-    } catch (error) {
-        console.error('Link generation error:', error.message);
-        throw error;
-    }
+//             return await generateZoomLink();
+//         } else if (platform === 'Google Meet') {
+//             return await generateGoogleMeetLink();
+//         } else {
+//             throw new Error('Unsupported platform');
+//         }
+//     } catch (error) {
+//         console.error('Link generation error:', error.message);
+//         throw error;
+//     }
+// };
+
+const generateLink = (platform) => {
+    const uid = Math.random().toString(36).substr(2, 9);
+    return platform === 'Zoom'
+        ? `https://zoom.us/j/${uid}`
+        : `https://meet.google.com/${uid}`;
 };
-
 
 // Nodemailer Setup
 const transporter = nodemailer.createTransport({

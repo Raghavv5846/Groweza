@@ -1232,8 +1232,8 @@ const FreelancerProfile = () => {
           </div>
         )}
 
-        {/* Projects Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 mb-8 animate-slide-up">
+       {/* Projects Section */}
+        {/* <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 mb-8 animate-slide-up">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Projects</h2>
             <button
@@ -1243,9 +1243,9 @@ const FreelancerProfile = () => {
               <Plus className="w-4 h-4" />
               Add Project
             </button>
-          </div>
+          </div> */}
 
-          {projects.length === 0 ? (
+          {/* {projects.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 <Briefcase className="w-16 h-16 mx-auto" />
@@ -1265,23 +1265,23 @@ const FreelancerProfile = () => {
                     key={proj._id}
                     className="border border-gray-200 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 animate-fade-in"
                     style={{ animationDelay: `${index * 0.1}s` }}
-                  >
+                  > */}
                     {/* Project Image */}
-                    {proj.image && (
+                    {/* {proj.image && (
                       <img
                         src={proj.image.url}
                         alt={proj.title}
                         className="w-full h-48 object-cover"
                       />
-                    )}
+                    )} */}
 
                     {/* Card Content */}
-                    <div className="p-6">
+                    {/* <div className="p-6">
                       <h3 className="font-bold text-gray-800 text-lg mb-2">{proj.title}</h3>
-                      <p className="text-gray-600 mb-4 text-sm">{proj.description}</p>
+                      <p className="text-gray-600 mb-4 text-sm">{proj.description}</p> */}
 
                       {/* Tech Stack */}
-                      {Array.isArray(proj.technologies) && proj.technologies.length > 0 && (
+                      {/* {Array.isArray(proj.technologies) && proj.technologies.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-4">
                           {proj.technologies.map((tech, i) => (
                             <span
@@ -1292,17 +1292,17 @@ const FreelancerProfile = () => {
                             </span>
                           ))}
                         </div>
-                      )}
+                      )} */}
 
                       {/* Actions */}
-                      <div className="flex gap-3">
+                      {/* <div className="flex gap-3"> */}
                         {/* Optional Edit button */}
                         {/* <button className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm transition-colors duration-200 cursor-pointer">
             <Edit2 className="w-4 h-4" />
             Edit
           </button> */}
                         {/* Live Link Button */}
-                        {proj.link && (
+                        {/* {proj.link && (
                           <a
                             href={proj.link.startsWith("http") ? proj.link : `https://${proj.link}`}
                             target="_blank"
@@ -1322,15 +1322,15 @@ const FreelancerProfile = () => {
                         </button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  </div> */}
+                {/* ))} */}
+              {/* </div>
 
           )}
-        </div>
+        </div> */}
 
         {/* Project Modal */}
-        {showProjectModal && (
+        {/* {showProjectModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-slide-up">
               <div className="flex items-center justify-between mb-6">
@@ -1410,10 +1410,10 @@ const FreelancerProfile = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Testimonials Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 animate-slide-up">
+        {/* <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 animate-slide-up">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Client Testimonials</h2>
             <button
@@ -1465,24 +1465,24 @@ const FreelancerProfile = () => {
 
                   <p className="text-gray-700 mb-4">"{test.feedback}"</p>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2"> */}
                     {/* <button className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm transition-colors duration-200 cursor-pointer">
                       <Edit2 className="w-3 h-3" />
                       Edit
                     </button> */}
-                    <button className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm transition-colors duration-200 cursor-pointer" onClick={()=>{HandleTestimonialDelete(test._id)}}>
+                    {/* <button className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm transition-colors duration-200 cursor-pointer" onClick={()=>{HandleTestimonialDelete(test._id)}}>
                       <Trash2 className="w-3 h-3" />
                       Delete
-                    </button>
-                  </div>
+                    </button> */}
+                  {/* </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Testimonial Modal */}
-        {showTestimonialModal && (
+        {/* {showTestimonialModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md animate-slide-up">
               <div className="flex items-center justify-between mb-6">
@@ -1577,7 +1577,7 @@ const FreelancerProfile = () => {
               </div>
             </div>
           </div>
-        )}
+        )}  */}
       </div>
 
       {/* Custom CSS for animations */}
