@@ -23,7 +23,7 @@ export const enforceLimits = (resource) => {
         }
 
         const planKey = activeSub.plan.toUpperCase();
-        console.log(planKey)
+        // console.log(planKey)
         const planLimits = PLANS[planKey];
 
         if (!planLimits || planLimits[resource] === undefined) {
@@ -38,11 +38,11 @@ export const enforceLimits = (resource) => {
         const used = activeSub.limits?.[resource]?.used || 0;
 
         // Debug log (only in dev)
-        if (process.env.NODE_ENV !== "production") {
-            console.log(
-                `[Limit Check] User: ${user._id}, Plan: ${planKey}, Resource: ${resource}, Used: ${used}, Limit: ${limit}`
-            );
-        }
+        // if (process.env.NODE_ENV !== "production") {
+        //     console.log(
+        //         `[Limit Check] User: ${user._id}, Plan: ${planKey}, Resource: ${resource}, Used: ${used}, Limit: ${limit}`
+        //     );
+        // }
 
         // ✅ Enforce limit
         if (limit !== Infinity && used >= limit) {

@@ -318,9 +318,9 @@ import { incrementUsage } from '../helpers/usageUpdation.js';
 export const getAllClients = async (req, res) => {
     try {
         const userId = req.user.userId;
-        console.log(userId);
+        // console.log(userId);
         const user = await User.findById(userId);
-        console.log(user);
+        // console.log(user);
         res.status(200).json(user.clients);
     } catch (error) {
         console.error("getAllClients error:", error.message);

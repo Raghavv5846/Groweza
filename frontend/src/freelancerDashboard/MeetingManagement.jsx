@@ -688,7 +688,7 @@ const MeetingManagement = () => {
                       value={form.platform}
                       onChange={(e) => setForm({ ...form, platform: e.target.value })}
                     >
-                      <option value="Zoom">Zoom</option>
+                      {/* <option value="Zoom">Zoom</option> */}
                       <option value="Google Meet">Google Meet</option>
                     </select>
                   </div>

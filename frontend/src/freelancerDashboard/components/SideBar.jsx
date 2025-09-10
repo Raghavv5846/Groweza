@@ -3,12 +3,13 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
     FaDollarSign, FaUsers, FaCalendarAlt, FaCheckCircle,
-    FaFileInvoice, FaRegFileAlt, FaPeopleArrows, FaBars
+    FaFileInvoice, FaRegFileAlt, FaPeopleArrows, FaBars,
+    FaAddressCard
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 const tabs = [
-    { name: "Dashboard", icon: <FaDollarSign />, link: "/dashboard" },
+    { name: "Dashboard", icon: <FaAddressCard />, link: "/dashboard" },
     { name: "Clients", icon: <FaUsers />, link: "/dashboard/clients" },
     { name: "Payments", icon: <FaDollarSign />, link: "/dashboard/payments" },
     { name: "Timeline", icon: <FaCalendarAlt />, link: "/dashboard/timeline" },

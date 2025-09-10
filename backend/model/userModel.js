@@ -49,7 +49,7 @@ const clientSchema = new mongoose.Schema({
 
 const subscriptionSchema = new mongoose.Schema(
     {
-        id: { type: String }, // PayPal/Stripe subscription ID (I-XXXX / sub_XXXX)
+        id: { type: String }, //
         plan: { type: String, enum: ["Free", "Basic", "Premium"], required: true },
         active: { type: Boolean, default: true },
         startedAt: { type: Date, default: Date.now },

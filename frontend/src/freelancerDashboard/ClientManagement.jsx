@@ -838,6 +838,10 @@ const Clients = () => {
     const [filter, setFilter] = useState('');
     const [showClientModal, setShowClientModal] = useState(false);
     const [showWorkModal, setShowWorkModal] = useState(null);
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [selectedClient, setSelectedClient] = useState(null);
+    const [editClient, setEditClient] = useState({});
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedClientId, setSelectedClientId] = useState(null);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [user, setUser] = useState(null);
@@ -876,18 +880,6 @@ const Clients = () => {
     }, []);
     const isClientLimitReached = isLimitReached(user, "clients");
 
-    // useEffect(() => {
-    //     axios
-    //         .get(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/subscription/me`)
-    //         .then((res) => setSubscription(res.data))
-    //         .catch((err) => console.error("Error fetching subscription:", err));
-    // }, []);
-
-    // const isClientLimitReached =
-    //     subscription?.limits?.clients?.used >= subscription?.limits?.clients?.max;
-
-
-
     
     const fetchClients = async () => {
         try {
@@ -911,6 +903,49 @@ const Clients = () => {
         } catch {
             toast.error('Error adding client');
             console.error('Error adding client');
+        }
+    };
+    const handleOpenUpdateModal = (client) => {
+        setSelectedClient(client);
+        setEditClient(client); // prefill fields
+        setShowUpdateModal(true);
+    };
+    const handleUpdateClient = async (clientId) => {
+        try {
+            const { data } = await axios.put(
+                `${BASE_URL}/api/clients/${clientId}`,
+                editClient,
+                authHeaders
+            );
+
+            setClients(prev =>
+                prev.map(c => (c._id === clientId ? data.client : c))
+            );
+
+            setShowUpdateModal(false);
+            toast.success("Client updated");
+        } catch (err) {
+            console.error("Error updating client:", err);
+            toast.error("Error updating client");
+        }
+    };
+
+    const handleOpenDeleteModal = (client) => {
+        setSelectedClient(client);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteClient = async (clientId) => {
+        try {
+            await axios.delete(`${BASE_URL}/api/clients/${clientId}`, authHeaders);
+
+            setClients(prev => prev.filter(c => c._id !== clientId));
+
+            setShowDeleteModal(false);
+            toast.success("Client deleted");
+        } catch (err) {
+            console.error("Error deleting client:", err);
+            toast.error("Error deleting client");
         }
     };
 
@@ -1020,7 +1055,7 @@ const Clients = () => {
                             isClientLimitReached ? setShowUpgradeModal(true) : setShowClientModal(true)
                         }
                         disabled={false} // still clickable, just changes behavior
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-all duration-200 transform active:scale-95 shadow-lg ${isClientLimitReached
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-lg cursor-pointer transition-all duration-200 transform active:scale-95 shadow-lg ${isClientLimitReached
                                 ? "bg-gray-400 text-gray-200 cursor-not-allowed"
                                 : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 hover:shadow-xl"
                             }`}
@@ -1056,7 +1091,7 @@ const Clients = () => {
                     <p className="text-gray-600 mb-6">Add your first client to get started!</p>
                     <button
                         onClick={() => setShowClientModal(true)}
-                        className="flex items-center gap-2 mx-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                        className="flex items-center gap-2 mx-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl cursor-pointer"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1084,6 +1119,21 @@ const Clients = () => {
                                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                                     </svg>
                                 </div>
+                                
+                            </div>
+                            <div className="flex gap-2 mt-4 mb-4">
+                                <button
+                                    onClick={() => handleOpenUpdateModal(client)}
+                                    className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all duration-200 cursor-pointer text-sm"
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    onClick={() => handleOpenDeleteModal(client)}
+                                    className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 cursor-pointer text-sm"
+                                >
+                                    Delete
+                                </button>
                             </div>
 
                             {/* Company and Notes */}
@@ -1213,13 +1263,13 @@ const Clients = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 animate-fade-in">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-md transform animate-scale-in">
                         <div className="p-6 border-b border-gray-200">
-                            <h2 className="text-xl font-bold text-gray-900">Add New Client</h2>
+                            <h2 className="text-xl font-bold text-gray-900 cursor-pointer">Add New Client</h2>
                         </div>
                         <div className="p-6 space-y-4">
                             {[
                                 { field: 'name', label: 'Full Name', type: 'text' },
                                 { field: 'email', label: 'Email Address', type: 'email' },
-                                { field: 'phone', label: 'Phone Number', type: 'tel' },
+                                { field: 'phone', label: 'Phone Number', type: 'number' },
                                 { field: 'company', label: 'Company', type: 'text' },
                                 { field: 'notes', label: 'Notes', type: 'text' }
                             ].map(({ field, label, type }) => (
@@ -1252,6 +1302,84 @@ const Clients = () => {
                     </div>
                 </div>
             )}
+
+            {/* Update Client Modal */}
+            {showUpdateModal && selectedClient && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md transform animate-scale-in">
+                        <div className="p-6 border-b border-gray-200">
+                            <h2 className="text-xl font-bold text-gray-900">Update Client</h2>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            {[
+                                { field: 'name', label: 'Full Name', type: 'text' },
+                                { field: 'email', label: 'Email Address', type: 'email' },
+                                { field: 'phone', label: 'Phone Number', type: 'number' },
+                                { field: 'company', label: 'Company', type: 'text' },
+                                { field: 'notes', label: 'Notes', type: 'text' }
+                            ].map(({ field, label, type }) => (
+                                <div key={field}>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                                    <input
+                                        type={type}
+                                        placeholder={`Enter ${label.toLowerCase()}`}
+                                        value={editClient[field] || ""}
+                                        onChange={e => setEditClient({ ...editClient, [field]: e.target.value })}
+                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="p-6 border-t border-gray-200 flex gap-3">
+                            <button
+                                onClick={() => handleUpdateClient(selectedClient._id)}
+                                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+                            >
+                                Save Changes
+                            </button>
+                            <button
+                                onClick={() => setShowUpdateModal(false)}
+                                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-all duration-200 cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showDeleteModal && selectedClient && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md transform animate-scale-in">
+                        <div className="p-6 border-b border-gray-200">
+                            <h2 className="text-xl font-bold text-gray-900">Delete Client</h2>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-gray-700">
+                                Are you sure you want to delete <span className="font-semibold">{selectedClient.name}</span>?
+                                This action cannot be undone.
+                            </p>
+                        </div>
+                        <div className="p-6 border-t border-gray-200 flex gap-3">
+                            <button
+                                onClick={() => handleDeleteClient(selectedClient._id)}
+                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+                            >
+                                Delete
+                            </button>
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-all duration-200 cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+
 
             {/* Work Modal */}
             {showWorkModal && (

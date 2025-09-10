@@ -1,60 +1,212 @@
-import React from 'react';
+// import React from 'react';
+// import {
+//     Document,
+//     Page,
+//     Text,
+//     View,
+//     StyleSheet,
+//     Font
+// } from '@react-pdf/renderer';
+
+// // Optional: You can register fonts here if needed
+// Font.register({
+//     family: 'Helvetica-Bold',
+//     fonts: [
+//         { src: 'https://fonts.gstatic.com/s/helveticaneue/v11/O4ZRFGnJvIpX8Y1sCxrUacMQ.woff2' }, // fallback
+//     ],
+// });
+
+// const styles = StyleSheet.create({
+//     page: {
+//         padding: 40,
+//         fontSize: 12,
+//         fontFamily: 'Helvetica',
+//         backgroundColor: '#1f2937',
+//         color: '#ffffff',
+//     },
+//     section: {
+//         marginBottom: 20,
+//         borderBottom: '1 solid #4b5563',
+//         paddingBottom: 10,
+//     },
+//     title: {
+//         fontSize: 16,
+//         fontWeight: 'bold',
+//         marginBottom: 6,
+//         color: '#ffffff',
+//     },
+//     text: {
+//         fontSize: 12,
+//         color: '#d1d5db',
+//     },
+//     listItem: {
+//         marginLeft: 12,
+//         marginBottom: 4,
+//     },
+//     center: {
+//         textAlign: 'center',
+//         marginTop: 200,
+//     },
+// });
+
+// const Section = ({ title, children }) => (
+//     <View style={styles.section}>
+//         <Text style={styles.title}>{title}</Text>
+//         {Array.isArray(children)
+//             ? children.map((item, i) => <Text key={i} style={styles.text}>{item}</Text>)
+//             : <Text style={styles.text}>{children}</Text>}
+//     </View>
+// );
+
+// const DarkDownloadableProposalPDF = ({ proposal }) => {
+//     const {
+//         client,
+//         freelancer,
+//         project,
+//         greeting,
+//         projectUnderstanding,
+//         objectives,
+//         proposedSolutions,
+//         timeline,
+//         milestones,
+//         budget,
+//         technologies,
+//         paymentTerms,
+//         additionalNotes,
+//         closing,
+//     } = proposal;
+
+//     return (
+//         <Document>
+//             {/* Cover Page */}
+//             <Page size="A4" style={styles.page}>
+//                 <View style={styles.center}>
+//                     <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10 }}>
+//                         Project Proposal
+//                     </Text>
+//                     <Text style={{ fontSize: 18, marginBottom: 20 }}>{project?.title}</Text>
+
+//                     <Text style={styles.text}>Prepared for:</Text>
+//                     <Text style={styles.text}>{client?.name}</Text>
+//                     <Text style={styles.text}>{client?.email}</Text>
+
+//                     <Text style={[styles.text, { marginTop: 30 }]}>Prepared by:</Text>
+//                     <Text style={styles.text}>{freelancer?.name}</Text>
+//                     <Text style={styles.text}>{freelancer?.title} | {freelancer?.email}</Text>
+//                     {freelancer?.phone && <Text style={styles.text}>{freelancer.phone}</Text>}
+//                     {freelancer?.website && <Text style={styles.text}>{freelancer.website}</Text>}
+//                 </View>
+//             </Page>
+
+//             {/* Proposal Pages */}
+//             <Page size="A4" style={styles.page}>
+//                 <Section title="Greeting">{greeting}</Section>
+//                 <Section title="Project Understanding">{projectUnderstanding}</Section>
+//                 <Section title="Objectives">{objectives}</Section>
+//                 <Section title="Proposed Solutions">{proposedSolutions}</Section>
+//                 <Section title="Timeline">{timeline}</Section>
+//                 <Section title="Milestones">
+//                     {milestones?.map((milestone, i) => (
+//                         <Text key={i} style={styles.listItem}>• {milestone}</Text>
+//                     ))}
+//                 </Section>
+//                 <Section title="Budget">{budget}</Section>
+//                 <Section title="Technologies">
+//                     {technologies?.map((tech, i) => (
+//                         <Text key={i} style={styles.listItem}>• {tech}</Text>
+//                     ))}
+//                 </Section>
+//                 <Section title="Payment Terms">{paymentTerms}</Section>
+//                 <Section title="Additional Notes">{additionalNotes}</Section>
+//                 <Section title="Closing">{closing}</Section>
+//             </Page>
+//         </Document>
+//     );
+// };
+
+// export default DarkDownloadableProposalPDF;
+
+import React from "react";
 import {
     Document,
     Page,
     Text,
     View,
     StyleSheet,
-    Font
-} from '@react-pdf/renderer';
+    Font,
+} from "@react-pdf/renderer";
 
-// Optional: You can register fonts here if needed
+// Custom font registration (optional)
 Font.register({
-    family: 'Helvetica-Bold',
+    family: "Helvetica-Bold",
     fonts: [
-        { src: 'https://fonts.gstatic.com/s/helveticaneue/v11/O4ZRFGnJvIpX8Y1sCxrUacMQ.woff2' }, // fallback
+        {
+            src: "https://fonts.gstatic.com/s/helveticaneue/v11/O4ZRFGnJvIpX8Y1sCxrUacMQ.woff2",
+        },
     ],
 });
 
+// Styles
 const styles = StyleSheet.create({
     page: {
         padding: 40,
         fontSize: 12,
-        fontFamily: 'Helvetica',
-        backgroundColor: '#1f2937',
-        color: '#ffffff',
+        fontFamily: "Helvetica",
+        backgroundColor: "#111827", // dark bg
+        color: "#e5e7eb", // gray-200 text
+    },
+    coverPage: {
+        justifyContent: "center",
+        alignItems: "center",
+        textAlign: "center",
+        flex: 1,
+    },
+    coverTitle: {
+        fontSize: 28,
+        fontWeight: "bold",
+        color: "#ffffff",
+        marginBottom: 10,
+    },
+    coverSubtitle: {
+        fontSize: 18,
+        color: "#60a5fa",
+        marginBottom: 30,
     },
     section: {
         marginBottom: 20,
-        borderBottom: '1 solid #4b5563',
+        borderBottom: "1 solid #374151",
         paddingBottom: 10,
     },
     title: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: "bold",
         marginBottom: 6,
-        color: '#ffffff',
+        color: "#ffffff",
     },
     text: {
         fontSize: 12,
-        color: '#d1d5db',
+        color: "#d1d5db",
+        lineHeight: 1.4,
     },
     listItem: {
         marginLeft: 12,
         marginBottom: 4,
-    },
-    center: {
-        textAlign: 'center',
-        marginTop: 200,
+        color: "#9ca3af",
     },
 });
 
 const Section = ({ title, children }) => (
     <View style={styles.section}>
         <Text style={styles.title}>{title}</Text>
-        {Array.isArray(children)
-            ? children.map((item, i) => <Text key={i} style={styles.text}>{item}</Text>)
-            : <Text style={styles.text}>{children}</Text>}
+        {Array.isArray(children) ? (
+            children.map((item, i) => (
+                <Text key={i} style={styles.text}>
+                    {item}
+                </Text>
+            ))
+        ) : (
+            <Text style={styles.text}>{children}</Text>
+        )}
     </View>
 );
 
@@ -80,25 +232,25 @@ const DarkDownloadableProposalPDF = ({ proposal }) => {
         <Document>
             {/* Cover Page */}
             <Page size="A4" style={styles.page}>
-                <View style={styles.center}>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10 }}>
-                        Project Proposal
-                    </Text>
-                    <Text style={{ fontSize: 18, marginBottom: 20 }}>{project?.title}</Text>
+                <View style={styles.coverPage}>
+                    <Text style={styles.coverTitle}>PROJECT PROPOSAL</Text>
+                    <Text style={styles.coverSubtitle}>{project?.title}</Text>
 
-                    <Text style={styles.text}>Prepared for:</Text>
+                    <Text style={[styles.text, { marginTop: 20 }]}>Prepared for:</Text>
                     <Text style={styles.text}>{client?.name}</Text>
                     <Text style={styles.text}>{client?.email}</Text>
 
                     <Text style={[styles.text, { marginTop: 30 }]}>Prepared by:</Text>
                     <Text style={styles.text}>{freelancer?.name}</Text>
-                    <Text style={styles.text}>{freelancer?.title} | {freelancer?.email}</Text>
+                    <Text style={styles.text}>
+                        {freelancer?.title} | {freelancer?.email}
+                    </Text>
                     {freelancer?.phone && <Text style={styles.text}>{freelancer.phone}</Text>}
                     {freelancer?.website && <Text style={styles.text}>{freelancer.website}</Text>}
                 </View>
             </Page>
 
-            {/* Proposal Pages */}
+            {/* Proposal Content Pages */}
             <Page size="A4" style={styles.page}>
                 <Section title="Greeting">{greeting}</Section>
                 <Section title="Project Understanding">{projectUnderstanding}</Section>
@@ -107,13 +259,17 @@ const DarkDownloadableProposalPDF = ({ proposal }) => {
                 <Section title="Timeline">{timeline}</Section>
                 <Section title="Milestones">
                     {milestones?.map((milestone, i) => (
-                        <Text key={i} style={styles.listItem}>• {milestone}</Text>
+                        <Text key={i} style={styles.listItem}>
+                            • {milestone}
+                        </Text>
                     ))}
                 </Section>
                 <Section title="Budget">{budget}</Section>
                 <Section title="Technologies">
                     {technologies?.map((tech, i) => (
-                        <Text key={i} style={styles.listItem}>• {tech}</Text>
+                        <Text key={i} style={styles.listItem}>
+                            • {tech}
+                        </Text>
                     ))}
                 </Section>
                 <Section title="Payment Terms">{paymentTerms}</Section>

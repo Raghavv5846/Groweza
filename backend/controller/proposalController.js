@@ -72,7 +72,7 @@ Follow a professional tone and keep the text persuasive yet clear.
                 { role: 'system', content: 'You are a professional freelance proposal writer.' },
                 { role: 'user', content: prompt },
             ],
-            model: 'gpt-4',
+            model: 'gpt-5-nano',
         });
 
         const content = response.choices[0].message.content;

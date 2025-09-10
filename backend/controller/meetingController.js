@@ -335,14 +335,13 @@ const generateZoomLink = async () => {
 
 // Google OAuth setup
 const auth = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+    process.env.MEET_GOOGLE_CLIENT_ID,
+    process.env.MEET_GOOGLE_CLIENT_SECRET,
+    process.env.MEET_GOOGLE_REDIRECT_URI
 );
 auth.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
 const calendar = google.calendar({ version: 'v3', auth });
 
-// Generate real Zoom link
 
 // Generate real Google Meet link
 const generateGoogleMeetLink = async () => {
@@ -366,28 +365,28 @@ const generateGoogleMeetLink = async () => {
 };
 
 // Unified function
-// export const generateLink = async (platform) => {
-//     try {
-//         if (platform === 'Zoom') {
+export const generateLink = async (platform) => {
+    try {
+        if (platform === 'Zoom') {
 
-//             return await generateZoomLink();
-//         } else if (platform === 'Google Meet') {
-//             return await generateGoogleMeetLink();
-//         } else {
-//             throw new Error('Unsupported platform');
-//         }
-//     } catch (error) {
-//         console.error('Link generation error:', error.message);
-//         throw error;
-//     }
-// };
-
-const generateLink = (platform) => {
-    const uid = Math.random().toString(36).substr(2, 9);
-    return platform === 'Zoom'
-        ? `https://zoom.us/j/${uid}`
-        : `https://meet.google.com/${uid}`;
+            return await generateGoogleMeetLink();
+        } else if (platform === 'Google Meet') {
+            return await generateGoogleMeetLink();
+        } else {
+            throw new Error('Unsupported platform');
+        }
+    } catch (error) {
+        console.error('Link generation error:', error.message);
+        throw error;
+    }
 };
+
+// const generateLink = (platform) => {
+//     const uid = Math.random().toString(36).substr(2, 9);
+//     return platform === 'Zoom'
+//         ? `https://zoom.us/j/${uid}`
+//         : `https://meet.google.com/${uid}`;
+// };
 
 // Nodemailer Setup
 const transporter = nodemailer.createTransport({
@@ -429,7 +428,7 @@ export const createMeeting = async (req, res) => {
             text: `Meeting Details:\nDate: ${meetingDate}\nTime: ${startTime}\nLink: ${meetingLink}`,
         });
 
-        await logActivity(freelancerId, `Created a meeting with ${clientName} on ${meetingDate} at ${startTime}`);
+        await logActivity(freelancerId, 'MEETING_CREATED', `Created a meeting with ${clientName} on ${meetingDate} at ${startTime}`);
 
         await incrementUsage(freelancerId, "meetings");
 
@@ -462,7 +461,7 @@ export const rescheduleMeeting = async (req, res) => {
             text: `New Date: ${newDate}\nTime: ${newStartTime}\nLink: ${meeting.meetingLink}`,
         });
 
-        await logActivity(req.user.userId, `Rescheduled meeting with ${meeting.clientName} to ${newDate} at ${newStartTime}`);
+        await logActivity(req.user.userId, 'MEETING_RESCHEDULED',`Rescheduled meeting with ${meeting.clientName} to ${newDate} at ${newStartTime}`);
 
         res.status(200).json(meeting);
     } catch (err) {
@@ -490,7 +489,7 @@ export const cancelMeeting = async (req, res) => {
             text: `Your meeting scheduled on ${meeting.meetingDate} at ${meeting.startTime} has been cancelled.`,
         });
 
-        await logActivity(req.user.userId, `Cancelled meeting with ${meeting.clientName} on ${meeting.meetingDate}`);
+        await logActivity(req.user.userId, 'MEETING_CANCELLED', `Cancelled meeting with ${meeting.clientName} on ${meeting.meetingDate}`);
 
         res.status(200).json({ message: "Meeting cancelled successfully" });
     } catch (err) {
@@ -514,7 +513,6 @@ export const deleteMeeting = async (req, res) => {
     try {
         const { meetingId } = req.params;
         await Meeting.findByIdAndDelete(meetingId);
-        await logActivity(req.user.userId, `Deleted a meeting (ID: ${meetingId})`);
         res.status(200).json({ message: 'Meeting deleted' });
     } catch (err) {
         res.status(500).json({ message: 'Failed to delete meeting' });

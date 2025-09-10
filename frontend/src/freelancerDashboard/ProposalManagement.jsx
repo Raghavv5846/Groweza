@@ -403,11 +403,45 @@ const ProposalManagement = () => {
     }
   };
 
+  // const handleGenerate = async () => {
+  //   setIsGenerating(true);
+
+  //   try {
+
+  //     const res = await axios.post(
+  //       `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/proposal/generate`,
+  //       {
+  //         projectTitle: formData.projectTitle,
+  //         projectDescription: formData.projectDescription,
+  //         clientName: formData.clientName,
+  //       },
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     setIsGenerating(false);
+
+  //     setPreviewData({
+  //       client: {
+  //         name: formData.clientName,
+  //         email: formData.clientEmail,
+  //       },
+  //       freelancer: res.data.freelancer,
+  //       project: {
+  //         title: formData.projectTitle,
+  //         description: formData.projectDescription,
+  //       },
+  //       ...res.data.structuredProposal, // contains all sections like greeting, objectives etc.
+  //     });
+  //   } catch (err) {
+  //     toast.error('Failed to generate proposal');
+  //   }
+  // };
+
   const handleGenerate = async () => {
     setIsGenerating(true);
 
     try {
-
       const res = await axios.post(
         `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/proposal/generate`,
         {
@@ -430,12 +464,16 @@ const ProposalManagement = () => {
           title: formData.projectTitle,
           description: formData.projectDescription,
         },
-        ...res.data.structuredProposal, // contains all sections like greeting, objectives etc.
+        ...res.data.structuredProposal,
       });
     } catch (err) {
-      toast.error('Failed to generate proposal');
+      console.error(err); // helps debugging
+      toast.error("Failed to generate proposal");
+    } finally {
+      setIsGenerating(false); // ensures spinner stops
     }
   };
+
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -867,7 +905,7 @@ const ProposalManagement = () => {
     </button>
 
     {/* Download PDF */}
-    {pdfTemplateComponents[template] && (
+    {/* {pdfTemplateComponents[template] && (
       <PDFDownloadLink
         document={React.createElement(pdfTemplateComponents[template], {
           proposal: previewData,
@@ -886,7 +924,29 @@ const ProposalManagement = () => {
           </button>
         )}
       </PDFDownloadLink>
-    )}
+    )} */}
+
+                  {pdfTemplateComponents[template] && (
+                    <PDFDownloadLink
+                      document={React.createElement(pdfTemplateComponents[template], {
+                        proposal: previewData,
+                      })}
+                      fileName={`Proposal_${(formData.projectTitle || 'Untitled')
+                        .replace(/\s+/g, '_')
+                        .replace(/[^a-zA-Z0-9_]/g, '')}.pdf`}
+                    >
+                      {({ loading }) => (
+                        <button
+                          aria-label="Download Proposal PDF"
+                          className={`flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl ${loading ? 'opacity-70 cursor-not-allowed' : ''
+                            }`}
+                          disabled={loading}
+                        >
+                          {loading ? 'Preparing PDF...' : 'Download PDF'}
+                        </button>
+                      )}
+                    </PDFDownloadLink>
+                  )}
   </div>
 )}
 
