@@ -1246,6 +1246,11 @@ const GrowezaLanding = () => {
     const dashboardref = useRef(null);
     const navigate = useNavigate();
 
+    useEffect(()=>{
+        if(localStorage.getItem("authToken")){
+            navigate("/dashboard")
+        }
+    })
     // Advanced scroll and mouse tracking
     useEffect(() => {
         const handleScroll = () => setScrollY(window.scrollY);
@@ -1404,7 +1409,7 @@ const GrowezaLanding = () => {
                         {/* Logo */}
                         <div className="flex-shrink-0">
                             <h1 className="text-3xl font-black bg-gradient-to-r from-violet-600 via-purple-600 to-blue-600 bg-clip-text text-transparent cursor-pointer">
-                                Groweza
+                             Groweza
                             </h1>
                         </div>
 

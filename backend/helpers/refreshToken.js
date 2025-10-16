@@ -34,7 +34,7 @@ dotenv.config();
 const oAuth2Client = new google.auth.OAuth2(
     "159622135988-tnch4kq8mtfs8pieemagejkb7k3dif5g.apps.googleusercontent.com",
     "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",
-    "http://localhost:8080/oauth2callback"
+    "https://api.groweza.com/oauth2callback"
 );
 
 const authUrl = oAuth2Client.generateAuthUrl({

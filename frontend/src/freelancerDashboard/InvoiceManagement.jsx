@@ -1161,10 +1161,17 @@ const InvoiceManagement = () => {
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 w-[90%]">
-          <div className="bg-white rounded-2xl p-8 flex items-center gap-4">
-            <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-gray-700 font-medium">Processing...</span>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 w-full">
+          <div className=" mx-auto">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+                ))}
+              </div>
+              <div className="h-64 bg-gray-200 rounded-xl"></div>
+            </div>
           </div>
         </div>
       )}
