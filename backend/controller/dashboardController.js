@@ -150,15 +150,75 @@ export const getDashboardStats = async (req, res) => {
             countInvoices({ status: "Pending" })
         ]);
 
-        const outstanding = await sumInvoices({ status: "Pending" });
 
         // ---------- Revenue (from PAID invoices) ----------
+        // ---------- Revenue (from PAID works) ----------
+        const revenueAggregateForRange = async (rangeStart) => {
+            const result = await User.aggregate([
+                { $match: { _id: freelancerId } },
+                { $unwind: "$clients" },
+                { $unwind: "$clients.works" },
+                {
+                    $match: {
+                        "clients.works.paymentStatus": "Paid",
+                        "clients.works.startDate": { $gte: rangeStart },
+                    },
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: "$clients.works.cost" },
+                    },
+                },
+            ]);
+
+            return result[0]?.total || 0;
+        };
+
+        const revenueAggregateTotal = async () => {
+            const result = await User.aggregate([
+                { $match: { _id: freelancerId } },
+                { $unwind: "$clients" },
+                { $unwind: "$clients.works" },
+                { $match: { "clients.works.paymentStatus": "Paid" } },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: "$clients.works.cost" },
+                    },
+                },
+            ]);
+            return result[0]?.total || 0;
+        };
+
+        // Calculate for week, month, year, total
         const [revWeek, revMonth, revYear, revTotal] = await Promise.all([
-            sumInvoices({ generatedAt: { $gte: weekStart }, status: "Paid" }),
-            sumInvoices({ generatedAt: { $gte: monthStart }, status: "Paid" }),
-            sumInvoices({ generatedAt: { $gte: yearStart }, status: "Paid" }),
-            sumInvoices({ status: "Paid" })
+            revenueAggregateForRange(weekStart),
+            revenueAggregateForRange(monthStart),
+            revenueAggregateForRange(yearStart),
+            revenueAggregateTotal()
         ]);
+
+        // Also compute outstanding = sum of all unpaid (Pending/Overdue)
+        const outstandingResult = await User.aggregate([
+            { $match: { _id: freelancerId } },
+            { $unwind: "$clients" },
+            { $unwind: "$clients.works" },
+            {
+                $match: {
+                    "clients.works.paymentStatus": { $in: ["Pending", "Overdue"] },
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$clients.works.cost" },
+                },
+            },
+        ]);
+
+        const outstanding = outstandingResult[0]?.total || 0;
+
 
         // ---------- Proposals ----------
         const proposalsForRange = async (rangeStart) => {
@@ -248,7 +308,7 @@ export const getDashboardStats = async (req, res) => {
                     month: { total: invoicesMonth[0], paid: invoicesMonth[1], unpaid: invoicesMonth[2] },
                     year: { total: invoicesYear[0], paid: invoicesYear[1], unpaid: invoicesYear[2] },
                     total: { total: invoicesTotal[0], paid: invoicesTotal[1], unpaid: invoicesTotal[2] },
-                    outstanding
+                 
                 },
                 proposals: {
                     week: proposalsWeek,
@@ -270,7 +330,6 @@ export const getDashboardStats = async (req, res) => {
                 total: revTotal,
                 outstanding
             }
-
         };
 
         return res.status(200).json(response);

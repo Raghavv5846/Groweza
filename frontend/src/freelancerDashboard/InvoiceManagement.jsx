@@ -653,7 +653,7 @@ const InvoiceManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50  md:p-6 w-full p-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50  md:p-6 w-full p-6">
       <div className=" mx-auto">
         {/* Header */}
         <div className="text-center mb-8 animate-slide-down">

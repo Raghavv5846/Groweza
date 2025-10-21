@@ -183,8 +183,8 @@
 
 
 import React, { useEffect, useState } from 'react';
-// import axios from 'axios';
-// import { toast } from 'react-toastify';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const PAGE_SIZE = 10;
 
@@ -199,7 +199,7 @@ const InvoiceTable = () => {
   const [loading, setLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
 
-  // const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('authToken');
 
   // Mock data for demo
   const mockInvoices = [
@@ -252,52 +252,112 @@ const InvoiceTable = () => {
 
   const fetchProfile = async () => {
     try {
-      // const { data } = await axios.get(
-      //   `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/freelancer/me`,
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   }
-      // );
-      // setUser(data);
-      // fetchInvoices(data._id);
-
-      // Mock API call
-      setTimeout(() => {
-        setUser({ _id: 'user123', name: 'John Doe' });
-        fetchInvoices('user123');
-      }, 500);
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/freelancer/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setUser(data);
+      fetchInvoices(data._id);
+      setLoading(false);
     } catch {
-      // toast.error('Failed to load profile');
-      console.error('Failed to load profile');
+      toast.error('Failed to load profile');
     }
   };
 
+  // const fetchInvoices = async (freelancerId) => {
+  //   try {
+  //     const res = await axios.get(
+  //       `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/invoices/${freelancerId}`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     setInvoices(res.data.invoices);
+  //     setLoading(false);
+
+  //   } catch (err) {
+  //     console.error('Error fetching invoices:', err);
+  //     toast.error('Failed to load invoices');
+  //   }
+  // };
+
+
+  // const fetchProfile = async () => {
+  //   try {
+  //     const res = await axios.get(
+  //       `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/invoices/me`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     const { freelancer, invoices } = res.data;
+  //     setUser(freelancer);
+  //     setInvoices(
+  //       invoices.map((inv) => ({
+  //         invoiceId: inv.invoiceId,
+  //         invoiceNumber: inv.invoiceNumber,
+  //         client: inv.client || { name: "Unknown Client" },
+  //         status: inv.status || "Pending",
+  //         amount: inv.amount || 0,
+  //         generatedAt: inv.generatedAt,
+  //         pdfUrl: inv.work?.document?.url || null,
+  //       }))
+  //     );
+  //     setLoading(false);
+  //   } catch (err) {
+  //     console.error("Error fetching profile:", err);
+  //     toast.error("Failed to load data");
+  //     setLoading(false);
+  //   }
+  // };
+
+
   const fetchInvoices = async (freelancerId) => {
     try {
-      // const res = await axios.get(
-      //   `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/invoices/${freelancerId}`,
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   }
-      // );
-      // setInvoices(res.data.invoices);
+      const res = await axios.get(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/invoices/${freelancerId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      // Mock API call
-      setTimeout(() => {
-        setInvoices(mockInvoices);
-        setLoading(false);
-        setAnimateContent(true);
-      }, 800);
+      // Adjust for new structure
+      const { freelancer, invoices } = res.data;
+
+      setUser(freelancer);
+      setInvoices(
+        invoices.map((inv) => ({
+          invoiceId: inv.invoiceId,
+          invoiceNumber: inv.invoiceNumber,
+          client: inv.client || { name: "Unknown Client" },
+          status: inv.status || "Pending",
+          amount: inv.amount || 0,
+          generatedAt: inv.generatedAt,
+          pdfUrl: inv.work?.document?.url || null, // from work if present
+        }))
+      );
+
+      setLoading(false);
     } catch (err) {
-      console.error('Error fetching invoices:', err);
-      // toast.error('Failed to load invoices');
+      console.error("Error fetching invoices:", err);
+      toast.error("Failed to load invoices");
       setLoading(false);
     }
   };
 
+
   useEffect(() => {
     fetchProfile();
   }, []);
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => setAnimateContent(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
 
   useEffect(() => {
     let data = [...invoices];
@@ -338,10 +398,17 @@ const InvoiceTable = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-7xl  flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
-          <p className="text-lg text-gray-600">Loading invoices...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 w-full">
+        <div className=" mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+              ))}
+            </div>
+            <div className="h-64 bg-gray-200 rounded-xl"></div>
+          </div>
         </div>
       </div>
     );
@@ -353,7 +420,7 @@ const InvoiceTable = () => {
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-            Invoice Management
+           All  Invoice 
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Track and manage all your invoices in one place
@@ -474,10 +541,12 @@ const InvoiceTable = () => {
                         <div className="flex items-center">
                           <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center mr-3">
                             <span className="text-white text-sm font-semibold">
-                              {inv.client?.name?.charAt(0) || 'N'}
+                              {inv.client?.name?.charAt(0)?.toUpperCase() || 'U'}
+
                             </span>
                           </div>
-                          <div className="text-gray-900 font-medium">{inv.client?.name || 'N/A'}</div>
+                          <div className="text-gray-900 font-medium">{inv.client?.name || 'Unknown Client'}
+</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">

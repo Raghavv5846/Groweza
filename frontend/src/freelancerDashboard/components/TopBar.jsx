@@ -364,7 +364,7 @@ export default function TopBar({ profile, onMobileMenuClick }) {
                         <img
                             src={
                                 profile ||
-                                "https://via.placeholder.com/48x48/6366f1/ffffff?text=U"
+                                "https://api.dicebear.com/9.x/avataaars/svg?seed=Christopher"
                             }
                             className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white 
                          transition-all duration-300 hover:border-gray-200"
@@ -390,6 +390,8 @@ export default function TopBar({ profile, onMobileMenuClick }) {
                                 path: "/dashboard/my-billings"
                             },
                             { label: "Subscription", color: "red-500", path: "/dashboard/my-subscriptions" },
+                            // { label: "All Invoice", color: "zinc-900", path: "/dashboard/my-invoice" },
+                            // { label: "All Proposal", color: "cyan-400", path: "/dashboard/all-proposal" },
 
                         ].map((item) => (
                             <DropdownMenuItem

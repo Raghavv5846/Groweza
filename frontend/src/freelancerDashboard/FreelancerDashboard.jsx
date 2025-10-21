@@ -596,53 +596,137 @@
 
 
 
+// import React, { useEffect, useMemo, useState } from 'react';
+// import { Card, CardContent } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import {
+//   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+//   PieChart, Pie, Cell
+// } from 'recharts';
+// import { useNavigate } from 'react-router-dom';
+
+// const TIME_RANGES = ["total", "year", "month", "week"]; // order: All Time, This Year, This Month, This Week
+
+// const rangeLabel = (range) => {
+//   if (range === 'total') return 'All Time';
+//   if (range === 'year') return 'This Year';
+//   if (range === 'month') return 'This Month';
+//   if (range === 'week') return 'This Week';
+//   return range;
+// };
+
+
+
+// const FreelancerDashboard = () => {
+//   const [stats, setStats] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const [activeCard, setActiveCard] = useState(null);
+//   const [timeRange, setTimeRange] = useState('total');
+//   const [revenueCache, setRevenueCache] = useState({}); // { total: [...], year: [...], month: [...], week: [...] }
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     // SINGLE API CALL → /stats (remove other API)
+//     const fetchStats = async () => {
+//       try {
+//         const response = await fetch(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/dashboard/stats`, {
+//           headers: {
+//             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+//           },
+//         });
+//         const data = await response.json();
+//         setStats(data);
+//         setTimeout(() => setLoading(false), 600); // keep the subtle shimmer feel
+//       } catch (err) {
+//         console.error(err);
+//         setLoading(false);
+//       }
+//     };
+//     fetchStats();
+//   }, []);
+
+//   // Build (or reuse) randomized revenue series for the selected range
+//   useEffect(() => {
+//     if (!stats) return;
+//     const totalForRange = stats?.revenue?.[timeRange] ?? 0;
+//     setRevenueCache((prev) => {
+//       // cache per range to keep consistency when toggling
+//       if (prev[timeRange]) return prev;
+//       return { ...prev, [timeRange]: generateRandomRevenueData(totalForRange) };
+//     });
+//   }, [stats, timeRange]);
+
+//   // Helpers to safely read numbers for each range
+//   const clientsCount = useMemo(() => {
+//     if (!stats?.stats?.clients) return 0;
+//     if (timeRange === 'total') return stats.stats.clients.total ?? 0;
+//     const obj = stats.stats.clients[timeRange];
+//     // API may return null for week/month/year → treat as 0
+//     return obj?.total ?? (obj === null ? 0 : 0);
+//   }, [stats, timeRange]);
+
+//   const invoicesUnpaid = stats?.stats?.invoices?.[timeRange]?.unpaid ?? 0;
+//   const proposalsPending = stats?.stats?.proposals?.[timeRange]?.pending ?? 0;
+//   const meetingsUpcoming = stats?.stats?.meetings?.[timeRange]?.upcoming ?? 0;
+//   const completedProjects = stats?.stats?.works?.[timeRange]?.completed ?? 0;
+//   const worksData = stats?.stats?.works?.[timeRange] ?? {
+//     completed: 0,
+//     pending: 0,
+//   };
+//   const projectData = [
+//     { name: "Completed", value: worksData.completed, color: "#4CAF50" },
+//     { name: "Pending", value: worksData.pending, color: "#FF9800" },
+//   ];
+
+//   const worksObj = stats?.stats?.works?.[timeRange] || { total: 0, completed: 0, pending: 0 };
+//   const inProgress = Math.max(
+//     0,
+//     (worksObj.total || 0) - (worksObj.completed || 0) - (worksObj.pending || 0)
+//   );
+
+//   const totalRevenueSelected = stats?.revenue?.[timeRange] ?? 0;
+//   const revenueData = useMemo(() => {
+//     if (!stats?.revenue) return [];
+
+//     return [
+//       { label: "Week", revenue: stats.revenue.week || 0 },
+//       { label: "Month", revenue: stats.revenue.month || 0 },
+//       { label: "Year", revenue: stats.revenue.year || 0 },
+//       { label: "All Time", revenue: stats.revenue.total || 0 },
+//     ];
+//   }, [stats]);
+
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell
-} from 'recharts';
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    BarChart, Bar, PieChart, Pie, Cell
+  } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
-const TIME_RANGES = ["total", "year", "month", "week"]; // order: All Time, This Year, This Month, This Week
+const TIME_RANGES = ["total", "year", "month", "week"];
 
 const rangeLabel = (range) => {
-  if (range === 'total') return 'All Time';
-  if (range === 'year') return 'This Year';
-  if (range === 'month') return 'This Month';
-  if (range === 'week') return 'This Week';
-  return range;
-};
-
-// Randomized distribution that always sums to total
-function generateRandomRevenueData(totalRevenue) {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]; // keep 6 points for a smooth line
-  if (!totalRevenue || totalRevenue <= 0) {
-    return months.map((m) => ({ month: m, revenue: 0 }));
+  switch (range) {
+    case "total": return "All Time";
+    case "year": return "This Year";
+    case "month": return "This Month";
+    case "week": return "This Week";
+    default: return range;
   }
-  const weights = months.map(() => Math.random());
-  const weightSum = weights.reduce((a, b) => a + b, 0);
-  const base = months.map((m, i) => ({
-    month: m,
-    revenue: Math.round((weights[i] / weightSum) * totalRevenue)
-  }));
-  // fix rounding drift to make sure sum === totalRevenue
-  const diff = totalRevenue - base.reduce((s, d) => s + d.revenue, 0);
-  base[base.length - 1].revenue += diff;
-  return base;
-}
+};
 
 const FreelancerDashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeCard, setActiveCard] = useState(null);
   const [timeRange, setTimeRange] = useState('total');
-  const [revenueCache, setRevenueCache] = useState({}); // { total: [...], year: [...], month: [...], week: [...] }
   const navigate = useNavigate();
 
+  // 🟢 Fetch single /stats API
   useEffect(() => {
-    // SINGLE API CALL → /stats (remove other API)
     const fetchStats = async () => {
       try {
         const response = await fetch(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/dashboard/stats`, {
@@ -652,7 +736,7 @@ const FreelancerDashboard = () => {
         });
         const data = await response.json();
         setStats(data);
-        setTimeout(() => setLoading(false), 600); // keep the subtle shimmer feel
+        setTimeout(() => setLoading(false), 600); // subtle shimmer delay
       } catch (err) {
         console.error(err);
         setLoading(false);
@@ -661,47 +745,29 @@ const FreelancerDashboard = () => {
     fetchStats();
   }, []);
 
-  // Build (or reuse) randomized revenue series for the selected range
-  useEffect(() => {
-    if (!stats) return;
-    const totalForRange = stats?.revenue?.[timeRange] ?? 0;
-    setRevenueCache((prev) => {
-      // cache per range to keep consistency when toggling
-      if (prev[timeRange]) return prev;
-      return { ...prev, [timeRange]: generateRandomRevenueData(totalForRange) };
-    });
-  }, [stats, timeRange]);
-
-  // Helpers to safely read numbers for each range
-  const clientsCount = useMemo(() => {
-    if (!stats?.stats?.clients) return 0;
-    if (timeRange === 'total') return stats.stats.clients.total ?? 0;
-    const obj = stats.stats.clients[timeRange];
-    // API may return null for week/month/year → treat as 0
-    return obj?.total ?? (obj === null ? 0 : 0);
-  }, [stats, timeRange]);
-
+  // 🟢 Extract all key stats safely
+  const clientsCount = stats?.stats?.clients?.[timeRange]?.total ?? 0;
   const invoicesUnpaid = stats?.stats?.invoices?.[timeRange]?.unpaid ?? 0;
   const proposalsPending = stats?.stats?.proposals?.[timeRange]?.pending ?? 0;
   const meetingsUpcoming = stats?.stats?.meetings?.[timeRange]?.upcoming ?? 0;
-  const completedProjects = stats?.stats?.works?.[timeRange]?.completed ?? 0;
-  const worksData = stats?.stats?.works?.[timeRange] ?? {
-    completed: 0,
-    pending: 0,
-  };
-  const projectData = [
-    { name: "Completed", value: worksData.completed, color: "#4CAF50" },
-    { name: "Pending", value: worksData.pending, color: "#FF9800" },
-  ];
-
-  const worksObj = stats?.stats?.works?.[timeRange] || { total: 0, completed: 0, pending: 0 };
-  const inProgress = Math.max(
-    0,
-    (worksObj.total || 0) - (worksObj.completed || 0) - (worksObj.pending || 0)
-  );
-
+  const worksData = stats?.stats?.works?.[timeRange] ?? { completed: 0, pending: 0, total: 0 };
   const totalRevenueSelected = stats?.revenue?.[timeRange] ?? 0;
-  const revenueData = revenueCache[timeRange] || [];
+    const projectData = [
+      { name: "Completed", value: worksData.completed, color: "#4CAF50" },
+      { name: "Pending", value: worksData.pending, color: "#FF9800" },
+    ];
+
+  // 🟢 Prepare real revenue data for chart
+  // Backend gives only summary per range (no monthly breakdown), so:
+  // - Show a single point if revenue exists.
+  // - Else empty state message.
+  const revenueData = useMemo(() => {
+    if (!stats?.revenue) return [];
+    const value = stats.revenue[timeRange] ?? 0;
+    if (!value || value <= 0) return [];
+    return [{ label: rangeLabel(timeRange), revenue: value }];
+  }, [stats, timeRange]);
+
 
   const StatCard = ({ icon, title, value, subtitle, color, index, trend, detail }) => (
     <Card
@@ -856,7 +922,7 @@ const FreelancerDashboard = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Revenue Chart */}
-          <div className="xl:col-span-2">
+          {/* <div className="xl:col-span-2">
             <Card className="h-full animate-fade-in-up">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -866,7 +932,7 @@ const FreelancerDashboard = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-purple-600">
-                      ${(totalRevenueSelected || 0).toLocaleString()}
+                      ₹{(totalRevenueSelected || 0).toLocaleString()}
                     </div>
                     <div className="text-sm text-gray-500">Revenue ({rangeLabel(timeRange)})</div>
                   </div>
@@ -887,7 +953,7 @@ const FreelancerDashboard = () => {
                     <LineChart data={revenueData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="month" stroke="#666" fontSize={12} />
-                      <YAxis stroke="#666" fontSize={12} tickFormatter={(value) => `$${value}`} />
+                        <YAxis stroke="#666" fontSize={12} tickFormatter={(value) => `₹${value}`} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: '#fff',
@@ -916,7 +982,70 @@ const FreelancerDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </div> */}
+          {/* Revenue Chart */}
+          <div className="xl:col-span-2">
+            <Card className="h-full animate-fade-in-up">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">📈 Revenue Overview</h3>
+                    <p className="text-gray-600">Track your earnings over time</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-purple-600">
+                      ₹{(stats?.revenue?.[timeRange] || 0).toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-500">Revenue ({rangeLabel(timeRange)})</div>
+                  </div>
+                </div>
+
+                {revenueData.length === 0 ? (
+                  <div className="h-64 flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <p>No revenue data yet.</p>
+                      <p className="text-xs">Complete paid works to see earnings.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={revenueData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="label" stroke="#666" fontSize={12} />
+                      <YAxis stroke="#666" fontSize={12} tickFormatter={(v) => `₹${v}`} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#fff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                        }}
+                        formatter={(value) => [`₹${value}`, 'Revenue']}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="url(#gradientPurple)"
+                        strokeWidth={3}
+                        dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#8B5CF6', strokeWidth: 2 }}
+                      />
+                      <defs>
+                        <linearGradient id="gradientPurple" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#8B5CF6" />
+                          <stop offset="100%" stopColor="#6366F1" />
+                        </linearGradient>
+                      </defs>
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
           </div>
+
 
           {/* Project Status Pie Chart */}
           <div className="xl:col-span-1">

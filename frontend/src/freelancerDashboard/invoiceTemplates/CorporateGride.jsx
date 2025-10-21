@@ -63,6 +63,135 @@
 
 
 
+// export const TemplateCorporate = ({ freelancer, client, works, logo, invoiceNumber, notes }) => {
+//     const subtotal = works.reduce((sum, w) => sum + w.cost, 0);
+//     const taxRate = 0.10; // 10% tax
+//     const taxAmount = subtotal * taxRate;
+//     const grandTotal = subtotal + taxAmount;
+
+//     return (
+//         <div className="max-w-2xl mx-auto bg-white shadow-lg">
+//             {/* Header with logo and company name */}
+//             <div className="bg-blue-800 text-white p-6 relative overflow-hidden">
+//                 <div className="flex items-center gap-3 relative z-10">
+//                     <div className=" rounded-lg flex items-center justify-center text-white font-bold">
+//                         {logo && <img src={logo} alt="logo" className="h-20 w-20 rounded-2xl" />}
+
+//                     </div>
+//                     <div>
+//                         <h1 className="text-xl font-bold">{freelancer.name || 'BORCELLE'}</h1>
+//                         <p className="text-sm opacity-90">Moving Company</p>
+//                     </div>
+//                 </div>
+//                 {/* Orange accent triangle */}
+//                 <div className="absolute top-0 right-0 w-32 h-full bg-orange-400 transform skew-x-12 translate-x-8"></div>
+//             </div>
+
+//             {/* Invoice title and details */}
+//             <div className="p-6 pb-4">
+//                 <div className="flex justify-between items-start mb-6">
+//                     <div>
+//                         <h2 className="text-4xl font-bold text-gray-800 mb-2">INVOICE</h2>
+//                         <div className="text-sm text-gray-600">
+//                             <p>Number: {invoiceNumber || '01234'}</p>
+//                             <p>Date: {new Date().toLocaleDateString()}</p>
+//                         </div>
+//                     </div>
+//                     <div className="text-right text-sm">
+//                         <div className="mb-4">
+//                             <h4 className="font-semibold text-gray-800 mb-1">PAYABLE TO</h4>
+//                             <p className="text-gray-600">{client.name || 'Mr. Howard Ong'}</p>
+//                             <p className="text-gray-600">{client.address || '123 Anywhere St., Any City'}</p>
+//                         </div>
+//                         <div>
+//                             <h4 className="font-semibold text-gray-800 mb-1">BANK DETAILS</h4>
+//                             <p className="text-gray-600">{client.company || 'Salford & Co.'}</p>
+//                             <p className="text-gray-600">{client.phone || '0123 4567 8901 2345'}</p>
+//                         </div>
+//                     </div>
+//                 </div>
+
+//                 {/* Services table */}
+//                 <div className="mb-6">
+//                     <div className="bg-blue-800 text-white text-sm font-semibold">
+//                         <div className="grid grid-cols-4 gap-4 p-3">
+//                             <div>ITEM DESCRIPTION</div>
+//                             <div className="text-center">QTY</div>
+//                             <div className="text-center">PRICE</div>
+//                             <div className="text-right">TOTAL</div>
+//                         </div>
+//                     </div>
+
+//                     <div className="text-sm">
+//                         {works.map((work, idx) => (
+//                             <div key={idx} className="grid grid-cols-4 gap-4 p-3 border-b border-gray-100">
+//                                 <div className="text-gray-700">{work.fieldOfWork}</div>
+//                                 <div className="text-center text-gray-700">1</div>
+//                                 <div className="text-center text-gray-700">₹{work.cost.toFixed(2)}</div>
+//                                 <div className="text-right text-gray-700">₹{work.cost.toFixed(2)}</div>
+//                             </div>
+//                         ))}
+//                     </div>
+
+//                     {/* Totals section */}
+//                     <div className="mt-6 text-right text-sm">
+//                         <div className="flex justify-between mb-2">
+//                             <span className="font-semibold">SUB TOTAL</span>
+//                             <span>₹ {subtotal.toFixed(2)}</span>
+//                         </div>
+//                         <div className="flex justify-between mb-2">
+//                             <span className="font-semibold">TAX (10%)</span>
+//                             <span>₹ {taxAmount.toFixed(2)}</span>
+//                         </div>
+//                         <div className="flex justify-between font-bold text-base pt-2 border-t">
+//                             <span>GRAND TOTAL</span>
+//                             <span>₹ {grandTotal.toFixed(2)}</span>
+//                         </div>
+//                     </div>
+
+//                     {/* Notes section */}
+//                     {notes && (
+//                         <div className="mt-6 text-sm">
+//                             <span className="font-semibold">NOTES:</span>
+//                             <p className="text-gray-600 mt-1">{notes}</p>
+//                         </div>
+//                     )}
+//                 </div>
+//             </div>
+
+//             {/* Footer */}
+//             <div className="bg-blue-800 text-white p-4 text-xs relative overflow-hidden">
+//                 <div className="flex justify-between items-center relative z-10">
+//                     <div className="flex items-center gap-4">
+//                         <div className="flex items-center gap-1">
+//                             <span>🌐</span>
+//                             <span>{freelancer.website || 'reallygreatsite.com'}</span>
+//                         </div>
+//                         <div className="flex items-center gap-1">
+//                             <span>📧</span>
+//                             <span>{freelancer.email || 'hello@reallygreatsite.com'}</span>
+//                         </div>
+//                     </div>
+//                     <div className="flex items-center gap-4">
+//                         <div className="flex items-center gap-1">
+//                             <span>📞</span>
+//                             <span>123-456-7890</span>
+//                         </div>
+//                         <div className="flex items-center gap-1">
+//                             <span>📍</span>
+//                             <span>123 Anywhere St., Any City, ST 12345</span>
+//                         </div>
+//                     </div>
+//                 </div>
+//                 {/* Orange accent triangle */}
+//                 <div className="absolute top-0 right-0 w-24 h-full bg-orange-400 transform skew-x-12 translate-x-6"></div>
+//             </div>
+//         </div>
+//     );
+// };
+
+
+
 export const TemplateCorporate = ({ freelancer, client, works, logo, invoiceNumber, notes }) => {
     const subtotal = works.reduce((sum, w) => sum + w.cost, 0);
     const taxRate = 0.10; // 10% tax
@@ -70,121 +199,166 @@ export const TemplateCorporate = ({ freelancer, client, works, logo, invoiceNumb
     const grandTotal = subtotal + taxAmount;
 
     return (
-        <div className="max-w-2xl mx-auto bg-white shadow-lg">
+        <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-md overflow-hidden font-sans text-sm">
             {/* Header with logo and company name */}
-            <div className="bg-blue-800 text-white p-6 relative overflow-hidden">
-                <div className="flex items-center gap-3 relative z-10">
-                    <div className=" rounded-lg flex items-center justify-center text-white font-bold">
-                        {logo && <img src={logo} alt="logo" className="h-20 w-20 rounded-2xl" />}
+            <div className="bg-blue-800 text-white p-6 sm:p-8 relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between relative z-10 gap-4">
+                    <div className="flex items-center gap-4">
+                        {logo ? (
+                            <img
+                                src={logo}
+                                alt="logo"
+                                className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl object-contain bg-white p-1"
+                            />
+                        ) : (
+                            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-white flex items-center justify-center text-blue-800 font-bold text-lg">
+                                LOGO
+                            </div>
+                        )}
+                        <div>
+                            <h1 className="text-xl sm:text-2xl font-bold tracking-wide">
+                                {freelancer.name || 'BORCELLE'}
+                            </h1>
+                            <p className="text-xs sm:text-sm opacity-90">
+                                {freelancer.role || 'Moving Company'}
+                            </p>
+                            <p className="text-xs sm:text-sm opacity-90">
+                                {freelancer.email || 'Moving Company'}
+                            </p>
 
+                                                </div>
                     </div>
-                    <div>
-                        <h1 className="text-xl font-bold">{freelancer.name || 'BORCELLE'}</h1>
-                        <p className="text-sm opacity-90">Moving Company</p>
-                    </div>
+
+                    {/* Orange accent triangle for desktop only */}
+                    <div className="hidden sm:block absolute top-0 right-0 w-32 h-full bg-orange-400 transform skew-x-12 translate-x-8"></div>
                 </div>
-                {/* Orange accent triangle */}
-                <div className="absolute top-0 right-0 w-32 h-full bg-orange-400 transform skew-x-12 translate-x-8"></div>
             </div>
 
             {/* Invoice title and details */}
-            <div className="p-6 pb-4">
-                <div className="flex justify-between items-start mb-6">
+            <div className="p-6 sm:p-8 pb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-6">
+                    {/* Invoice info */}
                     <div>
-                        <h2 className="text-4xl font-bold text-gray-800 mb-2">INVOICE</h2>
-                        <div className="text-sm text-gray-600">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
+                            INVOICE
+                        </h2>
+                        <div className="text-sm text-gray-600 space-y-1">
                             <p>Number: {invoiceNumber || '01234'}</p>
                             <p>Date: {new Date().toLocaleDateString()}</p>
                         </div>
                     </div>
-                    <div className="text-right text-sm">
+
+                    {/* Payable and bank details */}
+                    <div className="text-sm text-gray-700 w-full sm:w-auto">
                         <div className="mb-4">
                             <h4 className="font-semibold text-gray-800 mb-1">PAYABLE TO</h4>
-                            <p className="text-gray-600">{client.name || 'Mr. Howard Ong'}</p>
-                            <p className="text-gray-600">{client.address || '123 Anywhere St., Any City'}</p>
+                            <p>{client.name || 'Mr. Howard Ong'}</p>
+                            <p>{client.email || '123 Anywhere St., Any City'}</p>
+                            <p>{client.phone || '123 Anywhere St., Any City'}</p>
+                            <p>{client.company || '123 Anywhere St., Any City'}</p>
                         </div>
                         <div>
                             <h4 className="font-semibold text-gray-800 mb-1">BANK DETAILS</h4>
-                            <p className="text-gray-600">{client.company || 'Salford & Co.'}</p>
-                            <p className="text-gray-600">{client.phone || '0123 4567 8901 2345'}</p>
+                            <p>{freelancer.bank || 'Salford & Co.'}</p>
+                            <p>{freelancer.accountNumber || '0123 4567 8901 2345'}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Services table */}
-                <div className="mb-6">
-                    <div className="bg-blue-800 text-white text-sm font-semibold">
-                        <div className="grid grid-cols-4 gap-4 p-3">
-                            <div>ITEM DESCRIPTION</div>
-                            <div className="text-center">QTY</div>
-                            <div className="text-center">PRICE</div>
-                            <div className="text-right">TOTAL</div>
-                        </div>
+                <div className="mb-8">
+                    {/* Table Header */}
+                    <div className="hidden sm:grid grid-cols-4 gap-4 bg-blue-800 text-white text-xs sm:text-sm font-semibold">
+                        <div className="p-3">ITEM DESCRIPTION</div>
+                        <div className="text-center p-3">QTY</div>
+                        <div className="text-center p-3">PRICE</div>
+                        <div className="text-right p-3">TOTAL</div>
                     </div>
 
-                    <div className="text-sm">
+                    {/* Table Rows */}
+                    <div className="text-sm divide-y divide-gray-100">
                         {works.map((work, idx) => (
-                            <div key={idx} className="grid grid-cols-4 gap-4 p-3 border-b border-gray-100">
-                                <div className="text-gray-700">{work.fieldOfWork}</div>
-                                <div className="text-center text-gray-700">1</div>
-                                <div className="text-center text-gray-700">₹{work.cost.toFixed(2)}</div>
-                                <div className="text-right text-gray-700">₹{work.cost.toFixed(2)}</div>
+                            <div
+                                key={idx}
+                                className="grid grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-3"
+                            >
+                                <div className="text-gray-800 font-medium">
+                                    {work.fieldOfWork}
+                                </div>
+                                <div className="sm:text-center text-gray-700">
+                                    1
+                                </div>
+                                <div className="sm:text-center text-gray-700">
+                                    ₹{work.cost.toFixed(2)}
+                                </div>
+                                <div className="sm:text-right text-gray-700 font-medium">
+                                    ₹{work.cost.toFixed(2)}
+                                </div>
                             </div>
                         ))}
                     </div>
 
-                    {/* Totals section */}
-                    <div className="mt-6 text-right text-sm">
-                        <div className="flex justify-between mb-2">
-                            <span className="font-semibold">SUB TOTAL</span>
+                    {/* Totals Section */}
+                    <div className="mt-6 text-sm sm:text-base">
+                        <div className="flex justify-between py-1 text-gray-700">
+                            <span className="font-semibold">SUBTOTAL</span>
                             <span>₹ {subtotal.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between mb-2">
+                        <div className="flex justify-between py-1 text-gray-700">
                             <span className="font-semibold">TAX (10%)</span>
                             <span>₹ {taxAmount.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between font-bold text-base pt-2 border-t">
+                        <div className="flex justify-between font-bold text-lg border-t border-gray-300 pt-3 mt-2 text-gray-800">
                             <span>GRAND TOTAL</span>
                             <span>₹ {grandTotal.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    {/* Notes section */}
+                    {/* Notes Section */}
                     {notes && (
-                        <div className="mt-6 text-sm">
+                        <div className="mt-6 text-sm text-gray-700">
                             <span className="font-semibold">NOTES:</span>
-                            <p className="text-gray-600 mt-1">{notes}</p>
+                            <p className="mt-1 text-gray-600">{notes}</p>
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="bg-blue-800 text-white p-4 text-xs relative overflow-hidden">
-                <div className="flex justify-between items-center relative z-10">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
+            <div className="bg-blue-800 text-white p-5 text-xs sm:text-sm relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2">
                             <span>🌐</span>
                             <span>{freelancer.website || 'reallygreatsite.com'}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                             <span>📧</span>
                             <span>{freelancer.email || 'hello@reallygreatsite.com'}</span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
+
+                    <div className="space-y-1 sm:text-right">
+                        <div className="flex items-center gap-2 sm:justify-end">
                             <span>📞</span>
-                            <span>123-456-7890</span>
+                            <span>{freelancer.phone || '123-456-7890'}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2 sm:justify-end">
                             <span>📍</span>
-                            <span>123 Anywhere St., Any City, ST 12345</span>
+                            <span>
+                                {freelancer.location.city ||
+                                    '123 Anywhere St., Any City, ST 12345'}
+                            </span>
+                            <span>
+                                {freelancer.location.country ||
+                                    '123 Anywhere St., Any City, ST 12345'}
+                            </span>
                         </div>
                     </div>
                 </div>
-                {/* Orange accent triangle */}
-                <div className="absolute top-0 right-0 w-24 h-full bg-orange-400 transform skew-x-12 translate-x-6"></div>
+
+                {/* Orange accent triangle (visible on all screens) */}
+                <div className="absolute top-0 right-0 w-24 sm:w-32 h-full bg-orange-400 transform skew-x-12 translate-x-6"></div>
             </div>
         </div>
     );

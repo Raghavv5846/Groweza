@@ -632,17 +632,17 @@ const ProposalTable = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-        <div className="text-center animate-pulse">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-bounce"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 w-full">
+        <div className=" mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+              ))}
+            </div>
+            <div className="h-64 bg-gray-200 rounded-xl"></div>
           </div>
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-200 rounded-full w-48 mx-auto animate-pulse"></div>
-            <div className="h-3 bg-gray-100 rounded-full w-32 mx-auto animate-pulse delay-100"></div>
-          </div>
-          <p className="text-lg text-gray-600 mt-4 animate-bounce">Loading proposals...</p>
         </div>
       </div>
     );
