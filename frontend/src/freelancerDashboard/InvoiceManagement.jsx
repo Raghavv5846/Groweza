@@ -653,7 +653,7 @@ const InvoiceManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50  md:p-6 w-full p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50  md:p-6 w-full p-2">
       <div className=" mx-auto">
         {/* Header */}
         <div className="text-center mb-8 animate-slide-down">
@@ -1033,7 +1033,7 @@ const InvoiceManagement = () => {
           {/* Preview Section */}
           <div className={`animate-slide-left ${showPreview ? 'block' : 'hidden xl:block'}`}>
             {client && selectedWorkItems.length > 0 && user ? (
-              <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 transform transition-all duration-300 hover:shadow-xl print:shadow-none print:rounded-none">
+              <div className="bg-white rounded-2xl shadow-lg p-2 md:p-2  transform transition-all duration-300 hover:shadow-xl print:shadow-none print:rounded-none">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center">
                     <div className="w-2 h-8 bg-gradient-to-b from-purple-600 to-blue-600 rounded-full mr-3"></div>
