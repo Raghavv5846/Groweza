@@ -246,7 +246,6 @@ import TemplateClassic from './invoiceTemplates/TemplateClassic';
 import InvoiceLogoUploader from './components/LogoUploader';
 import { Check, Crown, X, Zap } from 'lucide-react';
 import { isLimitReached } from '../helpers/CheckLimit';
-
 // Template components mapping for dynamic rendering
 const templateComponents = {
   Minimal: TemplateMinimal,
@@ -256,7 +255,6 @@ const templateComponents = {
   Classic: TemplateClassic,
 };
 // Define allowed templates
-const basicTemplates = ["Minimal", "Colorful"];
 const premiumTemplates = ["Corporate", "Elegant", "Classic"];
 
 
@@ -272,7 +270,6 @@ const InvoiceManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-    const [subscription, setSubscription] = useState(null);
 
   // Get authentication token from localStorage
   const token = localStorage.getItem('authToken');
@@ -339,7 +336,8 @@ const InvoiceManagement = () => {
       ]);
       setUser(userRes.data);
       setClients(clientsRes.data);
-    } catch (err) {
+    } catch (error) {
+      console.error('Failed to load user/clients:', error);
       toast.error('Failed to load user/clients');
     } finally {
       setIsLoading(false);
@@ -356,7 +354,7 @@ const InvoiceManagement = () => {
   // Initialize component data on mount
   useEffect(() => {
     fetchUserAndClients();
-  }, []);
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Generate new invoice number when client or works change
   useEffect(() => {
@@ -404,77 +402,579 @@ const InvoiceManagement = () => {
         }
       );
       toast.success('Invoice saved to records');
-    } catch (err) {
+    } catch (error) {
+      console.error('Failed to save invoice:', error);
       toast.error('Failed to save invoice');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const forceFallbackColors = () => {
-    const root = document.documentElement.style;
 
-    root.setProperty('--background', '#ffffff');
-    root.setProperty('--foreground', '#000000');
-    root.setProperty('--primary', '#1E3A8A');
-    root.setProperty('--secondary', '#888888');
-    root.setProperty('--accent', '#FFD700');
-    root.setProperty('--muted', '#f0f0f0');
-    root.setProperty('--border', '#e0e0e0');
-    root.setProperty('--ring', '#cccccc');
-
-    // Add any others you're using
-  };
-
-
-
-  // const handleDownloadPDF = () => {
-  //   const input = document.getElementById('invoice-preview');
-
-  //   forceFallbackColors(); // apply fallback styles
-
-  //   html2canvas(input, { scale: 2 })
-  //     .then((canvas) => {
-  //       const imgData = canvas.toDataURL('image/png');
-  //       const pdf = new jsPDF('p', 'mm', 'a4');
-  //       const imgProps = pdf.getImageProperties(imgData);
-  //       const pdfWidth = pdf.internal.pageSize.getWidth();
-  //       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-  //       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-  //       pdf.save(`Invoice_${Date.now()}.pdf`);
-  //     })
-  //     .catch((err) => {
-  //       console.error("PDF generation failed:", err);
-  //     });
-  // };
-
-
-
-
-
-  const handleDownloadPDF = () => {
-    const input = document.getElementById('invoice-preview');
-
-    domtoimage.toPng(input)
-      .then((dataUrl) => {
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const img = new Image();
-        img.src = dataUrl;
-        img.onload = () => {
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (img.height * pdfWidth) / img.width;
-          pdf.addImage(img, 'PNG', 0, 0, pdfWidth, pdfHeight);
-          pdf.save(`Invoice_${Date.now()}.pdf`);
-        };
-      })
-      .catch((err) => {
-        console.error('PDF generation failed:', err);
+  // Wait for all content to be ready including images
+  const waitForContent = (element) => {
+    return new Promise((resolve) => {
+      const images = element.querySelectorAll('img');
+      if (images.length === 0) {
+        resolve();
+        return;
+      }
+      
+      let loadedImages = 0;
+      const imageLoadHandler = () => {
+        loadedImages++;
+        if (loadedImages === images.length) {
+          resolve();
+        }
+      };
+      
+      images.forEach(img => {
+        if (img.complete) {
+          imageLoadHandler();
+        } else {
+          img.addEventListener('load', imageLoadHandler);
+          img.addEventListener('error', imageLoadHandler); // Also resolve on error
+        }
       });
+      
+      // Fallback timeout
+      setTimeout(resolve, 2000);
+    });
   };
 
+  // Smart CSS sanitizer - only removes problematic oklch functions, preserves valid colors
+ // Enhanced CSS sanitizer that preserves template colors better
+const sanitizeCSS = (element) => {
+  const allElements = [element, ...element.querySelectorAll('*')];
+  
+  console.log('Starting enhanced CSS sanitization for', allElements.length, 'elements');
+  
+  allElements.forEach(el => {
+    try {
+      const computedStyle = window.getComputedStyle(el);
+      
+      // Only target color properties that might have oklch functions
+      const colorProperties = [
+        'color', 'background-color', 'border-color', 'border-top-color',
+        'border-right-color', 'border-bottom-color', 'border-left-color',
+        'box-shadow', 'text-shadow', 'outline-color', 'background'
+      ];
+      
+      colorProperties.forEach(prop => {
+        try {
+          const value = computedStyle.getPropertyValue(prop);
+          if (value && value !== 'initial' && value !== 'inherit' && value !== 'unset' && value !== 'transparent') {
+            
+            // ONLY sanitize if it contains problematic color functions
+            if (value.includes('oklch') || value.includes('color(') || 
+                value.includes('lab(') || value.includes('lch(') ||
+                value.includes('hwb(') || value.includes('color-mix(')) {
+              
+              console.log(`Sanitizing ${prop}: ${value}`);
+              
+              // Create temporary element to get computed RGB value
+              const tempDiv = document.createElement('div');
+              tempDiv.style.position = 'absolute';
+              tempDiv.style.left = '-9999px';
+              tempDiv.style.top = '-9999px';
+              tempDiv.style.width = '20px';
+              tempDiv.style.height = '20px';
+              tempDiv.style.visibility = 'hidden';
+              
+              // Try to get the computed color
+              tempDiv.style.setProperty(prop, value);
+              document.body.appendChild(tempDiv);
+              
+              try {
+                const computedValue = window.getComputedStyle(tempDiv).getPropertyValue(prop);
+                if (computedValue && computedValue !== value && computedValue !== 'transparent') {
+                  el.style.setProperty(prop, computedValue, 'important');
+                  console.log(`Converted ${prop} from ${value} to ${computedValue}`);
+                } else {
+                  // Use smart fallbacks that preserve design intent
+                  const fallbackColor = getSmartFallback(prop, el);
+                  el.style.setProperty(prop, fallbackColor, 'important');
+                  console.log(`Applied fallback ${prop}: ${fallbackColor}`);
+                }
+              } finally {
+                document.body.removeChild(tempDiv);
+              }
+            } else if (value.includes('linear-gradient') || value.includes('radial-gradient') || 
+                      value.includes('conic-gradient') || value.includes('repeating-')) {
+              // Preserve gradients but check for oklch within them
+              if (value.includes('oklch') || value.includes('color(') || 
+                  value.includes('lab(') || value.includes('lch(')) {
+                // Try to convert gradient with oklch colors
+                let sanitizedGradient = value;
+                // Simple conversion for common cases
+                sanitizedGradient = sanitizedGradient
+                  .replace(/oklch\([^)]+\)/g, 'rgb(59, 130, 246)') // Blue fallback
+                  .replace(/color\([^)]+\)/g, 'rgb(139, 92, 246)') // Purple fallback
+                  .replace(/lab\([^)]+\)/g, 'rgb(16, 185, 129)') // Green fallback
+                  .replace(/lch\([^)]+\)/g, 'rgb(239, 68, 68)'); // Red fallback
+                
+                el.style.setProperty(prop, sanitizedGradient, 'important');
+                console.log(`Sanitized gradient ${prop}: ${sanitizedGradient}`);
+              } else {
+                // Valid gradient - preserve exactly
+                el.style.setProperty(prop, value, 'important');
+              }
+            } else {
+              // Valid color/value - preserve it exactly
+              el.style.setProperty(prop, value, 'important');
+            }
+          }
+        } catch (err) {
+          console.warn(`Failed to process ${prop} for element:`, el, err);
+        }
+      });
+      const essentialStyles = [
+        'font-family', 'font-size', 'font-weight', 'line-height', 'font-style',
+        'text-align', 'text-decoration', 'text-transform', 'letter-spacing',
+        'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+        'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+        'width', 'max-width', 'min-width',
+        'display', 'flex-direction', 'justify-content', 'align-items', 'flex-wrap', 'flex', 'gap',
+        'grid-template-columns', 'grid-template-rows', 'grid-gap', 'grid-column-gap', 'grid-row-gap',
+        'border-radius', 'border-width', 'border-style', 'border',
+        'opacity', 'z-index', 'white-space', 'vertical-align',
+        'position', 'top', 'right', 'bottom', 'left', 'transform', 'transform-origin'
+      ];
+      
+      essentialStyles.forEach(prop => {
+        try {
+          const value = computedStyle.getPropertyValue(prop);
+          if (value && value !== 'auto' && value !== 'normal' && value !== 'initial' && value !== 'inherit') {
+            el.style.setProperty(prop, value, 'important');
+          }
+        } catch (error) {
+          // Silently continue for non-critical style errors
+          console.debug('Non-critical style error:', error);
+        }
+      });
+      // const essentialStyles = [
+      //   'font-family', 'font-size', 'font-weight', 'line-height', 'font-style',
+      //   'text-align', 'text-decoration', 'text-transform', 'letter-spacing',
+      //   'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+      //   'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+      //   'width', 'max-width', 'min-width',
+      //   'display', 'flex-direction', 'justify-content', 'align-items', 'flex-wrap', 'flex', 'gap',
+      //   'grid-template-columns', 'grid-template-rows', 'grid-gap', 'grid-column-gap', 'grid-row-gap',
+      //   'border-radius', 'border-width', 'border-style', 'border',
+      //   'opacity', 'z-index', 'white-space', 'vertical-align',
+      //   'position', 'top', 'right', 'bottom', 'left', 'transform', 'transform-origin'
+      // ];
+      
+      // essentialStyles.forEach(prop => {
+      //   try {
+      //     const value = computedStyle.getPropertyValue(prop);
+      //     if (value && value !== 'auto' && value !== 'normal' && value !== 'initial' && value !== 'inherit') {
+      //       el.style.setProperty(prop, value, 'important');
+      //     }
+      //   } catch (error) {
+      //     // Silently continue for non-critical style errors
+      //     console.debug('Non-critical style error:', error);
+      //   }
+      // });
+      
+    } catch (err) {
+      console.warn('Failed to process element:', el, err);
+    }
+  });
+  
+  console.log('Enhanced CSS sanitization completed');
+};
+
+  // Get smart fallback colors that preserve design intent
+  const getSmartFallback = (property, element) => {
+    const classList = element.classList ? Array.from(element.classList) : [];
+    const tagName = element.tagName.toLowerCase();
+    
+    // Analyze context to provide appropriate fallback
+    switch (property) {
+      case 'color':
+        if (classList.some(c => c.includes('white') || c.includes('light'))) return '#ffffff';
+        if (classList.some(c => c.includes('gray'))) return '#6b7280';
+        if (classList.some(c => c.includes('blue'))) return '#193cb9';
+        if (classList.some(c => c.includes('purple'))) return '#8b5cf6';
+        if (classList.some(c => c.includes('green'))) return '#10b981';
+        if (classList.some(c => c.includes('orange'))) return '#f97316';
+        return '#1f2937'; // Default dark text
+        
+      case 'background-color':
+      case 'background':
+        if (classList.some(c => c.includes('blue'))) return '#193cb9';
+        if (classList.some(c => c.includes('purple'))) return '#8b5cf6';
+        if (classList.some(c => c.includes('green'))) return '#10b981';
+        if (classList.some(c => c.includes('red'))) return '#ef4444';
+        if (classList.some(c => c.includes('yellow'))) return '#f59e0b';
+        if (classList.some(c => c.includes('gray'))) return '#6b7280';
+        if (classList.some(c => c.includes('black'))) return '#000000';
+        if (classList.some(c => c.includes('orange'))) return '#f97316';
+        if (tagName === 'th' || classList.some(c => c.includes('header'))) return '#1f2937';
+        return '#ffffff'; // Default white background
+        
+      case 'border-color':
+      case 'border-top-color':
+      case 'border-right-color':
+      case 'border-bottom-color':
+      case 'border-left-color':
+        if (classList.some(c => c.includes('blue'))) return '#193cb9';
+        if (classList.some(c => c.includes('purple'))) return '#8b5cf6';
+        if (classList.some(c => c.includes('orange'))) return '#f97316';
+        return '#e5e7eb'; // Default light border
+        
+      default:
+        return 'transparent';
+    }
+  };
+
+  // Create a clean clone for PDF generation that matches preview exactly
+  // Create a clean clone for PDF generation that matches preview exactly
+  const createPDFClone = (originalElement) => {
+    console.log('Creating fixed-width PDF clone...');
+    
+    // Create a deep clone
+    const clone = originalElement.cloneNode(true);
+    
+    // Set up clone positioning
+    clone.style.position = 'absolute';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+    clone.style.visibility = 'visible';
+    clone.style.display = 'block';
+    clone.style.opacity = '1';
+    clone.style.zIndex = '-1000';
+    clone.style.pointerEvents = 'none';
+    clone.id = 'pdf-clone-' + Date.now();
+
+    // *** THIS IS THE CRITICAL FIX ***
+    // Instead of copying the preview's responsive width,
+    // we force a fixed, consistent width. 800px is a 
+    // standard width for an A4-style document.
+    const FIXED_WIDTH = '900px';
+    clone.style.width = FIXED_WIDTH; 
+    clone.style.maxWidth = FIXED_WIDTH;
+    clone.style.minWidth = FIXED_WIDTH;
+    
+    // Allow height to grow as needed
+    clone.style.height = 'auto';
+    clone.style.maxHeight = 'none';
+    clone.style.boxSizing = 'border-box';
+    clone.style.margin = '0'; 
+    clone.style.padding = '0';
+    // *** END OF FIX ***
+    
+    // Add clone to document for style computation
+    document.body.appendChild(clone);
+    
+    // Force browser to compute styles
+    clone.offsetHeight;
+    clone.offsetWidth;
+    
+    // Apply smart CSS (color-only) sanitization
+    // This works because we modified sanitizeCSS in Step 1.
+    sanitizeCSS(clone);
+    
+    // The 'originalElements.forEach' loop that was here
+    // has been removed as it copied responsive styles.
+    
+    console.log('PDF clone created with FIXED width:', {
+      width: clone.offsetWidth,
+      height: clone.offsetHeight,
+    });
+    
+    return clone;
+  };
+
+  // Enhanced PDF generation using html2canvas + jsPDF directly
+// Enhanced PDF generation with better height handling
+const handleDownloadPDF = async () => {
+  const input = document.getElementById('invoice-preview');
+  if (!input) {
+    toast.error('Invoice preview not found');
+    return;
+  }
+
+  setIsLoading(true);
+  let cloneElement = null;
+
+  try {
+    await waitForContent(input);
+    
+    console.log('Creating enhanced PDF clone...');
+    // Create a sanitized clone for PDF generation
+    cloneElement = createPDFClone(input);
+    
+    // Wait for clone to be styled properly and CSS to be sanitized
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Check if element has content and dimensions
+    if (input.offsetWidth === 0 || input.offsetHeight === 0) {
+      throw new Error('Invoice element has no dimensions');
+    }
+
+    console.log('Generating PDF for enhanced clone:', {
+      width: cloneElement.offsetWidth,
+      height: cloneElement.offsetHeight,
+      content: cloneElement.innerHTML.length > 0 ? 'Content found' : 'No content'
+    });
+
+    // Detect mobile viewport for responsive PDF generation
+    const isMobile = window.innerWidth <= 768;
+    const isSmallMobile = window.innerWidth <= 480;
+    
+    console.log('PDF Generation Context:', {
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      isMobile,
+      isSmallMobile,
+      elementSize: { width: cloneElement.offsetWidth, height: cloneElement.offsetHeight }
+    });
+
+    // Enhanced canvas settings for better quality
+    const canvasScale = isMobile ? 1.5 : 2; // Higher scale for better quality
+    
+    const canvas = await html2canvas(cloneElement, {
+      scale: canvasScale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      // width: cloneElement.offsetWidth,
+      // height: cloneElement.offsetHeight,
+      scrollX: 0,
+      scrollY: 0,
+      x: 0,
+      y: 0,
+      foreignObjectRendering: false,
+      removeContainer: false,
+      imageTimeout: 8000,
+      logging: false,
+      ignoreElements: (element) => {
+        return element.classList?.contains('no-pdf') || 
+               element.tagName === 'SCRIPT' || 
+               element.tagName === 'STYLE';
+      }
+    });
+
+    console.log('Canvas generated successfully:', {
+      width: canvas.width,
+      height: canvas.height,
+      devicePixelRatio: window.devicePixelRatio
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    // Responsive margins based on device
+    let marginX, marginY;
+    if (isSmallMobile) {
+      marginX = 3;  // Very small margins for small mobile
+      marginY = 3;
+    } else if (isMobile) {
+      marginX = 5;  // Small margins for mobile
+      marginY = 5;
+    } else {
+      marginX = 8; // Smaller margins for desktop to use more space
+      marginY = 8;
+    }
+    
+    const availableWidth = pdfWidth - (marginX * 2);
+    const availableHeight = pdfHeight - (marginY * 2);
+    
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    
+    // Enhanced dimension calculation for better height handling
+    const dpiConversion = 0.264583; // 96 DPI to mm
+    let mmWidth = imgWidth * dpiConversion;
+    let mmHeight = imgHeight * dpiConversion;
+    
+    // Calculate scaling to fit available space - prioritize width
+    const scaleX = availableWidth / mmWidth;
+    const scaleY = availableHeight / mmHeight;
+    
+    // Use the smaller scale to ensure content fits, but allow slight scaling up
+    const scale = Math.min(scaleX, scaleY, 1.1);
+    
+    const finalWidth = mmWidth * scale;
+    const finalHeight = mmHeight * scale;
+    
+    // Better centering calculation
+    const x = Math.max(marginX, (pdfWidth - finalWidth) / 2);
+    const y = marginY;
+    
+    console.log('PDF Layout Calculation:', {
+      margins: { x: marginX, y: marginY },
+      available: { width: availableWidth, height: availableHeight },
+      original: { width: mmWidth, height: mmHeight },
+      final: { width: finalWidth, height: finalHeight, x, y },
+      scale,
+      fitsInPage: finalHeight <= availableHeight
+    });
+    
+    // Check if content fits in one page
+   // Scale to fit width
+const scaleFactor = availableWidth / mmWidth;
+const scaledHeight = mmHeight * scaleFactor;
+
+// Add image with pagination if too tall
+    if (scaledHeight > (availableHeight - 8) ) {
+      let position = marginY;
+      let pageHeightLeft = scaledHeight;
+      const imgHeightPerPage = availableHeight;
+
+      // Convert canvas to PNG (better for repeated slicing)
+      const imgDataPng = canvas.toDataURL('image/png', 1.0);
+
+      while (pageHeightLeft > 0) {
+        pdf.addImage(
+          imgDataPng,
+          'PNG',
+          marginX,
+          position,
+          availableWidth,
+          scaledHeight
+        );
+
+        pageHeightLeft -= availableHeight;
+        if (pageHeightLeft > 0) {
+          pdf.addPage();
+          position = marginY - (scaledHeight - pageHeightLeft);
+        }
+      }
+    } else {
+      pdf.addImage(imgData, 'JPEG', x, y, finalWidth, finalHeight);
+    }
+    
+    pdf.save(`Invoice_${invoiceNumber || Date.now()}.pdf`);
+    
+    toast.success('Invoice downloaded successfully!');
+    
+  } catch (error) {
+    console.error('PDF generation failed:', error);
+    
+    // Check if it's the oklch error specifically and try a simpler approach
+    if (error.message.includes('oklch') || error.message.includes('color function')) {
+      console.log('Attempting simple fallback PDF generation...');
+      
+      try {
+        // Ultra-simple approach - just use the original element with minimal options
+        const canvas = await html2canvas(input, {
+          scale: 1,
+          backgroundColor: '#ffffff',
+          logging: false,
+          useCORS: false,
+          allowTaint: false,
+          foreignObjectRendering: false,
+        });
+        
+        const imgData = canvas.toDataURL('image/jpeg', 0.8);
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 190; // Fixed width for A4
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+        pdf.save(`Invoice_${invoiceNumber || Date.now()}_fallback.pdf`);
+        
+        toast.success('PDF generated using fallback method!');
+        
+      } catch (fallbackError) {
+        console.error('Fallback PDF generation also failed:', fallbackError);
+        toast.error('Color compatibility issue detected. Please try using a different browser or refresh the page.');
+      }
+    } else {
+      toast.error(`Failed to generate PDF: ${error.message}`);
+    }
+  } finally {
+    // Clean up the clone
+    if (cloneElement && cloneElement.parentNode) {
+      cloneElement.parentNode.removeChild(cloneElement);
+    }
+    setIsLoading(false);
+  }
+};
 
 
+  // Debug function to test canvas generation
+  const debugCanvasGeneration = async () => {
+    const input = document.getElementById('invoice-preview');
+    if (!input) {
+      toast.error('Invoice preview not found');
+      return;
+    }
+
+    let cloneElement = null;
+
+    try {
+      await waitForContent(input);
+      
+      console.log('Creating debug clone with enhanced CSS preservation...');
+      // Create an enhanced clone for debugging
+      cloneElement = createPDFClone(input);
+      
+      // Wait for clone to be styled properly and sanitization to complete
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const canvas = await html2canvas(cloneElement, {
+        scale: 1,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        foreignObjectRendering: true, 
+        logging: true,
+        ignoreElements: (element) => {
+          return element.classList?.contains('no-pdf') || 
+                 element.tagName === 'SCRIPT' || 
+                 element.tagName === 'STYLE';
+        }
+      });
+
+      // Open canvas as image in new window for color testing
+      const imgData = canvas.toDataURL('image/png');
+      const newWindow = window.open();
+      newWindow.document.write(`
+        <html>
+          <head><title>Invoice Color Test Preview</title></head>
+          <body style="margin: 0; padding: 20px; background: #f0f0f0; font-family: Arial, sans-serif;">
+            <h2 style="color: #333;">Invoice Color Test Preview</h2>
+            <p style="color: #666;">This shows exactly how your invoice will appear in the PDF.</p>
+            <p style="color: #666;">Canvas Size: ${canvas.width} x ${canvas.height} pixels</p>
+            <p style="color: #666;">Device: ${window.innerWidth <= 768 ? 'Mobile' : 'Desktop'} (${window.innerWidth}px wide)</p>
+            <div style="border: 2px solid #ddd; background: white; padding: 10px; margin: 10px 0;">
+              <img src="${imgData}" style="max-width: 100%; height: auto; display: block;">
+            </div>
+            <p style="color: #666; font-size: 12px;">If colors are missing or incorrect, try refreshing the page and generating again.</p>
+          </body>
+        </html>
+
+      `);
+      
+      console.log('Debug canvas generated successfully:', {
+        width: canvas.width,
+        height: canvas.height,
+        dataURL: imgData.substring(0, 100) + '...'
+      });
+      
+      toast.success('Debug preview opened in new window!');
+      
+    } catch (error) {
+      console.error('Debug canvas generation failed:', error);
+      
+      if (error.message.includes('oklch') || error.message.includes('color function')) {
+        toast.error('Still encountering color compatibility issues in debug mode');
+      } else {
+        toast.error(`Debug failed: ${error.message}`);
+      }
+    } finally {
+      // Clean up the clone
+      if (cloneElement && cloneElement.parentNode) {
+        cloneElement.parentNode.removeChild(cloneElement);
+      }
+    }
+  };
 
   const sendInvoiceToClient = async ({ clientName, clientEmail }) => {
     const input = document.getElementById('invoice-preview');
@@ -502,7 +1002,7 @@ const InvoiceManagement = () => {
       formData.append('clientEmail', clientEmail);
       formData.append('pdf', pdfBlob, `Invoice_${Date.now()}.pdf`);
 
-      const res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/invoices/send-invoice`, formData, {
+      const _res = await axios.post(`${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/invoices/send-invoice`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
@@ -1020,6 +1520,14 @@ const InvoiceManagement = () => {
                             "💾 Save"
                           )}
                         </button>
+
+                        {/* Debug Button - For testing color preservation */}
+                        <button
+                          onClick={debugCanvasGeneration}
+                          className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 rounded-xl font-semibold transform transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2"
+                        >
+                          🔍 Test Colors
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1031,9 +1539,9 @@ const InvoiceManagement = () => {
           </div>
 
           {/* Preview Section */}
-          <div className={`animate-slide-left ${showPreview ? 'block' : 'hidden xl:block'}`}>
+          <div className={`animate-slide-left overflow-visible ${showPreview ? 'block' : 'hidden xl:block'}`}>
             {client && selectedWorkItems.length > 0 && user ? (
-              <div className="bg-white rounded-2xl shadow-lg p-2 md:p-2  transform transition-all duration-300 hover:shadow-xl print:shadow-none print:rounded-none">
+              <div className="bg-white rounded-2xl shadow-lg p-2 md:p-2 transform transition-all duration-300 hover:shadow-xl print:shadow-none print:rounded-none overflow-visible">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center">
                     <div className="w-2 h-8 bg-gradient-to-b from-purple-600 to-blue-600 rounded-full mr-3"></div>
@@ -1044,10 +1552,16 @@ const InvoiceManagement = () => {
                   </div>
                 </div>
                 <div
-                  className="bg-white shadow p-4 rounded print:border print:p-0"
-                  id="invoice-preview" // 👈 Add this
+                  className="bg-white shadow p-4 rounded print:border print:p-0 overflow-visible"
+                  id="invoice-preview"
+                  style={{
+                    minHeight: '500px',
+                    width: '100%',
+                    position: 'relative',
+                    zIndex: 1
+                  }}
                 >
-                <div className="transform transition-all duration-300 hover:scale-[1.02]" >
+                <div className="transform transition-all duration-300 hover:scale-[1.02] w-full" >
                   <TemplateComponent
                     freelancer={user}
                     client={client}
@@ -1205,6 +1719,54 @@ const InvoiceManagement = () => {
         .animate-slide-left {
           animation: slide-left 0.8s ease-out;
         }
+        
+        /* PDF-safe styles - fallbacks for problematic CSS */
+        @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          
+          /* Ensure backgrounds print */
+          .bg-gradient-to-r,
+          .bg-gradient-to-br,
+          .bg-gradient-to-b {
+            background: linear-gradient(to right, #8b5cf6, #3b82f6) !important;
+          }
+          
+          /* Fallback colors for common classes */
+          .text-purple-600 { color: #9333ea !important; }
+          .text-blue-600 { color: #2563eb !important; }
+          .text-gray-800 { color: #1f2937 !important; }
+          .text-gray-600 { color: #4b5563 !important; }
+          .bg-white { background-color: #ffffff !important; }
+          .bg-gray-50 { background-color: #f9fafb !important; }
+          .border-gray-200 { border-color: #e5e7eb !important; }
+          
+          /* Remove animations for PDF */
+          * {
+            animation-duration: 0s !important;
+            animation-delay: 0s !important;
+            transition-duration: 0s !important;
+            transition-delay: 0s !important;
+          }
+        }
+        
+        /* PDF generation safe colors */
+        #invoice-preview-clone * {
+          color: inherit !important;
+          background-color: inherit !important;
+          border-color: inherit !important;
+        }
+        
+        #invoice-preview-clone .text-purple-600 { color: #9333ea !important; }
+        #invoice-preview-clone .text-blue-600 { color: #2563eb !important; }
+        #invoice-preview-clone .text-gray-800 { color: #1f2937 !important; }
+        #invoice-preview-clone .text-gray-600 { color: #4b5563 !important; }
+        #invoice-preview-clone .bg-white { background-color: #ffffff !important; }
+        #invoice-preview-clone .bg-gray-50 { background-color: #f9fafb !important; }
+        #invoice-preview-clone .border-gray-200 { border-color: #e5e7eb !important; }
       `}</style>
     </div>
   );
