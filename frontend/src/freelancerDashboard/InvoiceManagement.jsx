@@ -379,8 +379,6 @@ const InvoiceManagement = () => {
       prev.includes(workId) ? prev.filter((id) => id !== workId) : [...prev, workId]
     );
   };
-
-  // Calculate total cost of selected works
   const totalCost = selectedWorkItems.reduce((acc, work) => acc + (work.cost || 0), 0);
 
   // Save invoice to database
@@ -410,8 +408,6 @@ const InvoiceManagement = () => {
     }
   };
 
-
-  // Wait for all content to be ready including images
   const waitForContent = (element) => {
     return new Promise((resolve) => {
       const images = element.querySelectorAll('img');
@@ -442,18 +438,14 @@ const InvoiceManagement = () => {
     });
   };
 
-  // Smart CSS sanitizer - only removes problematic oklch functions, preserves valid colors
- // Enhanced CSS sanitizer that preserves template colors better
 const sanitizeCSS = (element) => {
   const allElements = [element, ...element.querySelectorAll('*')];
   
-  console.log('Starting enhanced CSS sanitization for', allElements.length, 'elements');
+  // console.log('Starting enhanced CSS sanitization for', allElements.length, 'elements');
   
   allElements.forEach(el => {
     try {
       const computedStyle = window.getComputedStyle(el);
-      
-      // Only target color properties that might have oklch functions
       const colorProperties = [
         'color', 'background-color', 'border-color', 'border-top-color',
         'border-right-color', 'border-bottom-color', 'border-left-color',
@@ -465,14 +457,12 @@ const sanitizeCSS = (element) => {
           const value = computedStyle.getPropertyValue(prop);
           if (value && value !== 'initial' && value !== 'inherit' && value !== 'unset' && value !== 'transparent') {
             
-            // ONLY sanitize if it contains problematic color functions
             if (value.includes('oklch') || value.includes('color(') || 
                 value.includes('lab(') || value.includes('lch(') ||
                 value.includes('hwb(') || value.includes('color-mix(')) {
               
-              console.log(`Sanitizing ${prop}: ${value}`);
+              // console.log(`Sanitizing ${prop}: ${value}`);
               
-              // Create temporary element to get computed RGB value
               const tempDiv = document.createElement('div');
               tempDiv.style.position = 'absolute';
               tempDiv.style.left = '-9999px';
@@ -481,7 +471,6 @@ const sanitizeCSS = (element) => {
               tempDiv.style.height = '20px';
               tempDiv.style.visibility = 'hidden';
               
-              // Try to get the computed color
               tempDiv.style.setProperty(prop, value);
               document.body.appendChild(tempDiv);
               
@@ -489,24 +478,20 @@ const sanitizeCSS = (element) => {
                 const computedValue = window.getComputedStyle(tempDiv).getPropertyValue(prop);
                 if (computedValue && computedValue !== value && computedValue !== 'transparent') {
                   el.style.setProperty(prop, computedValue, 'important');
-                  console.log(`Converted ${prop} from ${value} to ${computedValue}`);
+                  // console.log(`Converted ${prop} from ${value} to ${computedValue}`);
                 } else {
-                  // Use smart fallbacks that preserve design intent
                   const fallbackColor = getSmartFallback(prop, el);
                   el.style.setProperty(prop, fallbackColor, 'important');
-                  console.log(`Applied fallback ${prop}: ${fallbackColor}`);
+                  // console.log(`Applied fallback ${prop}: ${fallbackColor}`);
                 }
               } finally {
                 document.body.removeChild(tempDiv);
               }
             } else if (value.includes('linear-gradient') || value.includes('radial-gradient') || 
                       value.includes('conic-gradient') || value.includes('repeating-')) {
-              // Preserve gradients but check for oklch within them
               if (value.includes('oklch') || value.includes('color(') || 
                   value.includes('lab(') || value.includes('lch(')) {
-                // Try to convert gradient with oklch colors
                 let sanitizedGradient = value;
-                // Simple conversion for common cases
                 sanitizedGradient = sanitizedGradient
                   .replace(/oklch\([^)]+\)/g, 'rgb(59, 130, 246)') // Blue fallback
                   .replace(/color\([^)]+\)/g, 'rgb(139, 92, 246)') // Purple fallback
@@ -514,13 +499,11 @@ const sanitizeCSS = (element) => {
                   .replace(/lch\([^)]+\)/g, 'rgb(239, 68, 68)'); // Red fallback
                 
                 el.style.setProperty(prop, sanitizedGradient, 'important');
-                console.log(`Sanitized gradient ${prop}: ${sanitizedGradient}`);
+                // console.log(`Sanitized gradient ${prop}: ${sanitizedGradient}`);
               } else {
-                // Valid gradient - preserve exactly
                 el.style.setProperty(prop, value, 'important');
               }
             } else {
-              // Valid color/value - preserve it exactly
               el.style.setProperty(prop, value, 'important');
             }
           }
@@ -548,7 +531,6 @@ const sanitizeCSS = (element) => {
             el.style.setProperty(prop, value, 'important');
           }
         } catch (error) {
-          // Silently continue for non-critical style errors
           console.debug('Non-critical style error:', error);
         }
       });
@@ -582,15 +564,13 @@ const sanitizeCSS = (element) => {
     }
   });
   
-  console.log('Enhanced CSS sanitization completed');
+  // console.log('Enhanced CSS sanitization completed');
 };
 
-  // Get smart fallback colors that preserve design intent
   const getSmartFallback = (property, element) => {
     const classList = element.classList ? Array.from(element.classList) : [];
     const tagName = element.tagName.toLowerCase();
     
-    // Analyze context to provide appropriate fallback
     switch (property) {
       case 'color':
         if (classList.some(c => c.includes('white') || c.includes('light'))) return '#ffffff';
@@ -599,6 +579,7 @@ const sanitizeCSS = (element) => {
         if (classList.some(c => c.includes('purple'))) return '#8b5cf6';
         if (classList.some(c => c.includes('green'))) return '#10b981';
         if (classList.some(c => c.includes('orange'))) return '#f97316';
+        if (classList.some(c => c.includes('teal'))) return '#00bba7';
         return '#1f2937'; // Default dark text
         
       case 'background-color':
@@ -611,8 +592,9 @@ const sanitizeCSS = (element) => {
         if (classList.some(c => c.includes('gray'))) return '#6b7280';
         if (classList.some(c => c.includes('black'))) return '#000000';
         if (classList.some(c => c.includes('orange'))) return '#f97316';
+        if (classList.some(c => c.includes('teal'))) return '#00bba7';
         if (tagName === 'th' || classList.some(c => c.includes('header'))) return '#1f2937';
-        return '#ffffff'; // Default white background
+        return '#ffffff'; 
         
       case 'border-color':
       case 'border-top-color':
@@ -622,22 +604,18 @@ const sanitizeCSS = (element) => {
         if (classList.some(c => c.includes('blue'))) return '#193cb9';
         if (classList.some(c => c.includes('purple'))) return '#8b5cf6';
         if (classList.some(c => c.includes('orange'))) return '#f97316';
-        return '#e5e7eb'; // Default light border
+        return '#e5e7eb'; 
         
       default:
         return 'transparent';
     }
   };
 
-  // Create a clean clone for PDF generation that matches preview exactly
-  // Create a clean clone for PDF generation that matches preview exactly
   const createPDFClone = (originalElement) => {
-    console.log('Creating fixed-width PDF clone...');
+    // console.log('Creating fixed-width PDF clone...');
     
-    // Create a deep clone
     const clone = originalElement.cloneNode(true);
     
-    // Set up clone positioning
     clone.style.position = 'absolute';
     clone.style.left = '-9999px';
     clone.style.top = '0';
@@ -648,47 +626,33 @@ const sanitizeCSS = (element) => {
     clone.style.pointerEvents = 'none';
     clone.id = 'pdf-clone-' + Date.now();
 
-    // *** THIS IS THE CRITICAL FIX ***
-    // Instead of copying the preview's responsive width,
-    // we force a fixed, consistent width. 800px is a 
-    // standard width for an A4-style document.
     const FIXED_WIDTH = '900px';
     clone.style.width = FIXED_WIDTH; 
     clone.style.maxWidth = FIXED_WIDTH;
     clone.style.minWidth = FIXED_WIDTH;
     
-    // Allow height to grow as needed
     clone.style.height = 'auto';
     clone.style.maxHeight = 'none';
     clone.style.boxSizing = 'border-box';
     clone.style.margin = '0'; 
     clone.style.padding = '0';
-    // *** END OF FIX ***
     
-    // Add clone to document for style computation
     document.body.appendChild(clone);
     
-    // Force browser to compute styles
     clone.offsetHeight;
     clone.offsetWidth;
-    
-    // Apply smart CSS (color-only) sanitization
-    // This works because we modified sanitizeCSS in Step 1.
+
     sanitizeCSS(clone);
     
-    // The 'originalElements.forEach' loop that was here
-    // has been removed as it copied responsive styles.
     
-    console.log('PDF clone created with FIXED width:', {
-      width: clone.offsetWidth,
-      height: clone.offsetHeight,
-    });
+    // console.log('PDF clone created with FIXED width:', {
+    //   width: clone.offsetWidth,
+    //   height: clone.offsetHeight,
+    // });
     
     return clone;
   };
 
-  // Enhanced PDF generation using html2canvas + jsPDF directly
-// Enhanced PDF generation with better height handling
 const handleDownloadPDF = async () => {
   const input = document.getElementById('invoice-preview');
   if (!input) {
@@ -702,36 +666,32 @@ const handleDownloadPDF = async () => {
   try {
     await waitForContent(input);
     
-    console.log('Creating enhanced PDF clone...');
-    // Create a sanitized clone for PDF generation
+    // console.log('Creating enhanced PDF clone...');
+
     cloneElement = createPDFClone(input);
     
-    // Wait for clone to be styled properly and CSS to be sanitized
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Check if element has content and dimensions
     if (input.offsetWidth === 0 || input.offsetHeight === 0) {
       throw new Error('Invoice element has no dimensions');
     }
 
-    console.log('Generating PDF for enhanced clone:', {
-      width: cloneElement.offsetWidth,
-      height: cloneElement.offsetHeight,
-      content: cloneElement.innerHTML.length > 0 ? 'Content found' : 'No content'
-    });
+    // console.log('Generating PDF for enhanced clone:', {
+    //   width: cloneElement.offsetWidth,
+    //   height: cloneElement.offsetHeight,
+    //   content: cloneElement.innerHTML.length > 0 ? 'Content found' : 'No content'
+    // });
 
-    // Detect mobile viewport for responsive PDF generation
     const isMobile = window.innerWidth <= 768;
     const isSmallMobile = window.innerWidth <= 480;
     
-    console.log('PDF Generation Context:', {
-      viewport: { width: window.innerWidth, height: window.innerHeight },
-      isMobile,
-      isSmallMobile,
-      elementSize: { width: cloneElement.offsetWidth, height: cloneElement.offsetHeight }
-    });
+    // console.log('PDF Generation Context:', {
+    //   viewport: { width: window.innerWidth, height: window.innerHeight },
+    //   isMobile,
+    //   isSmallMobile,
+    //   elementSize: { width: cloneElement.offsetWidth, height: cloneElement.offsetHeight }
+    // });
 
-    // Enhanced canvas settings for better quality
     const canvasScale = isMobile ? 1.5 : 2; // Higher scale for better quality
     
     const canvas = await html2canvas(cloneElement, {
@@ -756,11 +716,11 @@ const handleDownloadPDF = async () => {
       }
     });
 
-    console.log('Canvas generated successfully:', {
-      width: canvas.width,
-      height: canvas.height,
-      devicePixelRatio: window.devicePixelRatio
-    });
+    // console.log('Canvas generated successfully:', {
+    //   width: canvas.width,
+    //   height: canvas.height,
+    //   devicePixelRatio: window.devicePixelRatio
+    // });
 
     const imgData = canvas.toDataURL('image/jpeg', 0.98);
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -791,63 +751,78 @@ const handleDownloadPDF = async () => {
     const dpiConversion = 0.264583; // 96 DPI to mm
     let mmWidth = imgWidth * dpiConversion;
     let mmHeight = imgHeight * dpiConversion;
+
+    const scaleFactor = availableWidth / mmWidth;
     
-    // Calculate scaling to fit available space - prioritize width
-    const scaleX = availableWidth / mmWidth;
-    const scaleY = availableHeight / mmHeight;
-    
-    // Use the smaller scale to ensure content fits, but allow slight scaling up
-    const scale = Math.min(scaleX, scaleY, 1.1);
-    
-    const finalWidth = mmWidth * scale;
-    const finalHeight = mmHeight * scale;
-    
-    // Better centering calculation
-    const x = Math.max(marginX, (pdfWidth - finalWidth) / 2);
+    // 2. Calculate the final scaled height based on the width scale
+    const scaledHeight = mmHeight * .60;
+    const scaledWidth = availableWidth;
+
+    const x = marginX;
     const y = marginY;
+    // Calculate scaling to fit available space - prioritize width
+    // const scaleX = availableWidth / mmWidth;
+    // const scaleY = availableHeight / mmHeight;
     
-    console.log('PDF Layout Calculation:', {
-      margins: { x: marginX, y: marginY },
-      available: { width: availableWidth, height: availableHeight },
-      original: { width: mmWidth, height: mmHeight },
-      final: { width: finalWidth, height: finalHeight, x, y },
-      scale,
-      fitsInPage: finalHeight <= availableHeight
-    });
+    // // Use the smaller scale to ensure content fits, but allow slight scaling up
+    // const scale = Math.min(scaleX, scaleY, 1.1);
+    
+    // const finalWidth = mmWidth * scale;
+    // const finalHeight = mmHeight * scale;
+    
+    // // Better centering calculation
+    // const x = Math.max(marginX, (pdfWidth - finalWidth) / 2);
+    // const y = marginY;
+    
+    // console.log('PDF Layout Calculation (New):', {
+    //   margins: { x: marginX, y: marginY },
+    //   available: { width: availableWidth, height: availableHeight },
+    //   originalMM: { width: mmWidth, height: mmHeight },
+    //   finalScaled: { width: scaledWidth, height: scaledHeight },
+    //   scaleFactor,
+    //   fitsInPage: scaledHeight <= availableHeight
+    // });
     
     // Check if content fits in one page
    // Scale to fit width
-const scaleFactor = availableWidth / mmWidth;
-const scaledHeight = mmHeight * scaleFactor;
+// const scaleFactor = availableWidth / mmWidth;
+// const scaledHeight = mmHeight * scaleFactor;
 
 // Add image with pagination if too tall
-    if (scaledHeight > (availableHeight - 8) ) {
-      let position = marginY;
-      let pageHeightLeft = scaledHeight;
-      const imgHeightPerPage = availableHeight;
 
-      // Convert canvas to PNG (better for repeated slicing)
-      const imgDataPng = canvas.toDataURL('image/png', 1.0);
+if (scaledHeight <= availableHeight -2) {
+  // --- FITS ON ONE PAGE ---
+  // Content is short enough for a single page.
+  // console.log('Rendering on a single page.');
+  pdf.addImage(imgData, 'JPEG', x, y, scaledWidth, scaledHeight);
+  
+} else {
+  // --- NEEDS PAGINATION ---
+  // Content is too tall and needs to be sliced across multiple pages.
+  // console.log('Content is too tall, starting pagination...');
+  let position = y;
+  let heightLeft = scaledHeight;
+  const imgDataPng = canvas.toDataURL('image/png', 1.0); // Use PNG for cleaner slicing
 
-      while (pageHeightLeft > 0) {
-        pdf.addImage(
-          imgDataPng,
-          'PNG',
-          marginX,
-          position,
-          availableWidth,
-          scaledHeight
-        );
+  while (heightLeft > 0.1) { // Use a small threshold for floating point errors
+    pdf.addImage(
+      imgDataPng,
+      'PNG',
+      x,          // X position (constant)
+      position,   // Y position (will be negative on subsequent pages)
+      scaledWidth,  // Width of image (constant)
+      scaledHeight  // Total height of the *original* image (constant)
+    );
 
-        pageHeightLeft -= availableHeight;
-        if (pageHeightLeft > 0) {
-          pdf.addPage();
-          position = marginY - (scaledHeight - pageHeightLeft);
-        }
-      }
-    } else {
-      pdf.addImage(imgData, 'JPEG', x, y, finalWidth, finalHeight);
+    heightLeft -= availableHeight;
+
+    if (heightLeft > 0.1) {
+      pdf.addPage();
+      // The new Y position is the margin minus how much we've already rendered
+      position = marginY - (scaledHeight - heightLeft); 
     }
+  }
+}
     
     pdf.save(`Invoice_${invoiceNumber || Date.now()}.pdf`);
     
